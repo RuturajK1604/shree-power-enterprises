@@ -55,13 +55,15 @@ export const ShopUtilityApp: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'quote' | 'load' | 'price-list'>('quote');
 
   // =========================================================================
-  // 1. CALCULATE LOAD STATE
+  // 1. CALCULATE LOAD STATE (Dynamic Battery & Inverter Selection with Live Backup)
   // =========================================================================
   const [appliances, setAppliances] = useState<Appliance[]>(DEFAULT_APPLIANCES);
   const [customApplianceName, setCustomApplianceName] = useState('');
   const [customApplianceWatts, setCustomApplianceWatts] = useState<number>(100);
-  const [desiredHours, setDesiredHours] = useState<number>(4);
-  const [inverterWaveType, setInverterWaveType] = useState<'sine' | 'square'>('sine');
+  const [loadChosenInverterId, setLoadChosenInverterId] = useState<string>('evo-s-1050');
+  const [loadChosenBatteryId, setLoadChosenBatteryId] = useState<string>(
+    PRYCAL_PRICE_LIST.find((p) => p.category === 'Inverter Tall Tubular' && p.capacityAh === 150)?.id || PRYCAL_PRICE_LIST[0].id
+  );
 
   // =========================================================================
   // 2. CALCULATE QUOTE STATE
@@ -88,38 +90,35 @@ export const ShopUtilityApp: React.FC = () => {
   const [priceCategory, setPriceCategory] = useState<string>('all');
 
   // -------------------------------------------------------------------------
-  // LOAD CALCULATIONS
+  // LOAD & DYNAMIC BACKUP CALCULATIONS
   // -------------------------------------------------------------------------
   const totalWatts = appliances.reduce((sum, item) => sum + item.count * item.watts, 0);
-  const requiredWattHours = totalWatts * desiredHours;
-  // Battery Ah = Wh / (12V * 0.75 DoD)
-  const batteryAhNeeded = totalWatts > 0 ? Math.ceil(requiredWattHours / (12 * 0.75)) : 0;
 
-  // Recommended Inverter
-  let recommendedInverter = LUMINOUS_INVERTERS[1]; // EVO S 1050 (Sine)
-  if (inverterWaveType === 'square') {
-    recommendedInverter = totalWatts > 650 ? LUMINOUS_INVERTERS[4] : LUMINOUS_INVERTERS[3];
-  } else {
-    recommendedInverter = totalWatts > 650 ? LUMINOUS_INVERTERS[2] : LUMINOUS_INVERTERS[1];
-  }
+  // Active chosen battery in load tab
+  const loadActiveBattery =
+    PRYCAL_PRICE_LIST.find((p) => p.id === loadChosenBatteryId) ||
+    PRYCAL_PRICE_LIST.find((p) => p.model === 'P 150 TT 60') ||
+    PRYCAL_PRICE_LIST[0];
 
-  // Recommended Battery
-  let recommendedBatteryModel = PRYCAL_PRICE_LIST.find((p) => p.model === 'P 150 TT 60') || PRYCAL_PRICE_LIST[0];
-  if (batteryAhNeeded <= 120) {
-    recommendedBatteryModel = PRYCAL_PRICE_LIST.find((p) => p.model === 'P 110 TT 60') || recommendedBatteryModel;
-  } else if (batteryAhNeeded <= 170) {
-    recommendedBatteryModel = PRYCAL_PRICE_LIST.find((p) => p.model === 'P 150 TT 60') || recommendedBatteryModel;
-  } else if (batteryAhNeeded <= 210) {
-    recommendedBatteryModel = PRYCAL_PRICE_LIST.find((p) => p.model === 'P 200 TT 60') || recommendedBatteryModel;
-  } else if (batteryAhNeeded <= 235) {
-    recommendedBatteryModel = PRYCAL_PRICE_LIST.find((p) => p.model === 'P 225 TT 60') || recommendedBatteryModel;
-  } else if (batteryAhNeeded <= 275) {
-    recommendedBatteryModel = PRYCAL_PRICE_LIST.find((p) => p.model === 'P 250 TT 60') || recommendedBatteryModel;
-  } else {
-    recommendedBatteryModel = PRYCAL_PRICE_LIST.find((p) => p.model === 'P 300 TT 60') || recommendedBatteryModel;
-  }
+  // Active chosen inverter in load tab
+  const loadActiveInverter =
+    LUMINOUS_INVERTERS.find((inv) => inv.id === loadChosenInverterId) || LUMINOUS_INVERTERS[1];
 
-  const estimatedBackupHours = totalWatts > 0 ? ((recommendedBatteryModel.capacityAh * 12 * 0.75) / totalWatts).toFixed(1) : '0';
+  // Inverter overload check
+  const isInverterOverloaded = totalWatts > loadActiveInverter.watts && loadActiveInverter.watts > 0;
+  const inverterLoadPercentage =
+    loadActiveInverter.watts > 0 ? Math.round((totalWatts / loadActiveInverter.watts) * 100) : 0;
+
+  // Battery backup hours calculation (12V system, 75% Depth of Discharge for tubular plates)
+  const usableBatteryWattHours = loadActiveBattery.capacityAh * 12 * 0.75;
+  const backupHoursFullLoad = totalWatts > 0 ? (usableBatteryWattHours / totalWatts).toFixed(1) : '0';
+  const backupHoursTypicalLoad =
+    totalWatts > 0 ? (usableBatteryWattHours / (totalWatts * 0.7)).toFixed(1) : '0';
+
+  // Popular backup batteries for quick switching
+  const popularBackupBatteries = PRYCAL_PRICE_LIST.filter(
+    (p) => p.category === 'Inverter Tall Tubular' || p.category === 'Inverter Jumbo Tubular'
+  );
 
   const updateApplianceCount = (id: string, delta: number) => {
     setAppliances((prev) =>
@@ -139,14 +138,46 @@ export const ShopUtilityApp: React.FC = () => {
     setCustomApplianceWatts(100);
   };
 
+  // Move the user's custom chosen battery and inverter directly into Quote Generator
   const handleApplyLoadToQuote = () => {
-    setSelectedModelId(recommendedBatteryModel.id);
-    setSelectedCategory(recommendedBatteryModel.category);
-    setSelectedInverterId(recommendedInverter.id);
+    setSelectedModelId(loadActiveBattery.id);
+    setSelectedCategory(loadActiveBattery.category);
+    setSelectedInverterId(loadActiveInverter.id);
     setCustomInverterPrice(null);
     setQuantity(1);
     setActiveTab('quote');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Generate WhatsApp message specifically for Load & Backup calculation
+  const generateLoadBackupWhatsApp = () => {
+    const activeApps = appliances
+      .filter((a) => a.count > 0)
+      .map((a) => `${a.name}: ${a.count} (${a.count * a.watts}W)`)
+      .join(', ');
+
+    let msg = `*POWER BACKUP CALCULATION - SHREE POWER ENTERPRISES*\n`;
+    msg += `_Authorised Prycal Distributor · Savedi, Ahilyanagar_\n`;
+    msg += `------------------------------------\n`;
+    msg += `*Total Running Load:* ${totalWatts} Watts\n`;
+    if (activeApps) msg += `*Appliances:* ${activeApps}\n`;
+    msg += `------------------------------------\n`;
+    msg += `*CHOSEN INVERTER:* ${loadActiveInverter.name} (${loadActiveInverter.type})\n`;
+    msg += `• Capacity: ${loadActiveInverter.va}VA / ${loadActiveInverter.watts}W\n`;
+    msg += `• Load Utilization: ${inverterLoadPercentage}%\n`;
+    msg += `------------------------------------\n`;
+    msg += `*CHOSEN BATTERY:* Prycal ${loadActiveBattery.model} (${loadActiveBattery.capacity})\n`;
+    msg += `• Category: ${loadActiveBattery.category}\n`;
+    msg += `• Warranty: ${loadActiveBattery.warranty}\n`;
+    msg += `• Official MRP: ₹${loadActiveBattery.mrp.toLocaleString()}\n`;
+    msg += `• 10% Discount Offer: ₹${Math.round(loadActiveBattery.mrp * 0.9).toLocaleString()}\n`;
+    msg += `------------------------------------\n`;
+    msg += `*ESTIMATED BACKUP DURATION:*\n`;
+    msg += `• *Full Load (${totalWatts}W):* ~${backupHoursFullLoad} Hours\n`;
+    msg += `• *Average Everyday Load (~70%):* ~${backupHoursTypicalLoad} Hours\n`;
+    msg += `------------------------------------\n`;
+    msg += `*Contact:* Sanjay Kulkarni (+91 94224 64766) / Ruturaj Kulkarni (+91 88059 22623)`;
+    return `https://wa.me/?text=${encodeURIComponent(msg)}`;
   };
 
   // -------------------------------------------------------------------------
@@ -838,34 +869,45 @@ export const ShopUtilityApp: React.FC = () => {
         )}
 
         {/* =====================================================================
-            TAB 2: CALCULATE LOAD (INVERTER & BATTERY SIZER)
+            TAB 2: CALCULATE LOAD (INTERACTIVE BACKUP SIMULATOR)
            ===================================================================== */}
         {activeTab === 'load' && (
           <div className="space-y-6">
             {/* Header info */}
             <div className="bg-white rounded-xl border border-slate-300 p-4 shadow-xs">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <h2 className="text-base sm:text-lg font-black text-slate-900">
-                    Home &amp; Shop Power Load Calculator
+                    Power Load &amp; Interactive Backup Simulator
                   </h2>
                   <p className="text-xs text-slate-600">
-                    Select appliances running simultaneously to determine the exact <strong>Inverter capacity (VA)</strong> and <strong>Prycal Battery (Ah)</strong> required.
+                    Add your appliances to calculate total running load, then <strong>switch between inverters and batteries</strong> to see exactly how many hours of backup you will get on full load!
                   </p>
                 </div>
-                <div className="text-xs font-mono font-bold bg-amber-100 text-amber-900 px-3 py-1.5 rounded-lg border border-amber-300 shrink-0">
-                  Total Running Load: {totalWatts} Watts
+                <div className="flex items-center gap-2">
+                  <div className="text-xs font-mono font-bold bg-amber-100 text-amber-900 px-3 py-1.5 rounded-lg border border-amber-300 shrink-0">
+                    Total Load: {totalWatts} Watts
+                  </div>
                 </div>
               </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-              {/* Left Column: Appliances & Hours */}
+              {/* Left Column: Appliances + Inverter Selector + Battery Selector */}
               <div className="lg:col-span-7 space-y-4">
-                {/* Standard Appliances Grid */}
+                {/* Step 1: Appliances Matrix */}
                 <div className="bg-white rounded-xl border border-slate-300 p-4 shadow-xs">
-                  <div className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3">
-                    1. Select Running Appliances:
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                      Step 1 · Select Running Appliances ({appliances.reduce((s, a) => s + a.count, 0)} Active):
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setAppliances(DEFAULT_APPLIANCES.map((a) => ({ ...a, count: 0 })))}
+                      className="text-[11px] text-slate-500 hover:text-slate-800 underline cursor-pointer"
+                    >
+                      Clear All
+                    </button>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -873,7 +915,7 @@ export const ShopUtilityApp: React.FC = () => {
                       <div
                         key={app.id}
                         className={`p-2.5 rounded-lg border flex items-center justify-between transition-colors ${
-                          app.count > 0 ? 'bg-amber-50/60 border-amber-300' : 'bg-slate-50 border-slate-200'
+                          app.count > 0 ? 'bg-amber-50/70 border-amber-300' : 'bg-slate-50 border-slate-200'
                         }`}
                       >
                         <div>
@@ -909,7 +951,7 @@ export const ShopUtilityApp: React.FC = () => {
                   <form onSubmit={handleAddCustomAppliance} className="mt-3 pt-3 border-t border-slate-200 flex items-center gap-2">
                     <input
                       type="text"
-                      placeholder="Add custom appliance (e.g. Printer)"
+                      placeholder="Add custom appliance (e.g. Mixer, Printer)"
                       value={customApplianceName}
                       onChange={(e) => setCustomApplianceName(e.target.value)}
                       className="flex-1 px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg text-slate-900 bg-white"
@@ -935,153 +977,249 @@ export const ShopUtilityApp: React.FC = () => {
                   </form>
                 </div>
 
-                {/* Desired Backup Hours */}
-                <div className="bg-white rounded-xl border border-slate-300 p-4 shadow-xs">
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                      2. Desired Backup Duration:
-                    </label>
-                    <span className="text-xs font-mono font-extrabold text-amber-800 bg-amber-100 px-2 py-0.5 rounded">
-                      {desiredHours} Hours Backup
+                {/* Step 2: Choose Inverter Option */}
+                <div className="bg-white rounded-xl border border-slate-300 p-4 shadow-xs space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-700 block">
+                        Step 2 · Select Luminous Inverter Option:
+                      </span>
+                      <span className="text-[11px] text-slate-500">
+                        Check whether the inverter supports your {totalWatts}W load without tripping
+                      </span>
+                    </div>
+                    <span className="text-xs font-bold font-mono text-slate-700">
+                      Selected: {loadActiveInverter.name}
                     </span>
                   </div>
 
-                  {/* Slider */}
-                  <input
-                    type="range"
-                    min="1"
-                    max="10"
-                    step="1"
-                    value={desiredHours}
-                    onChange={(e) => setDesiredHours(Number(e.target.value))}
-                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-amber-500"
-                  />
-
-                  {/* Quick Preset Buttons */}
-                  <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-100">
-                    <span className="text-[11px] text-slate-500">Quick presets:</span>
-                    {[2, 3, 4, 6, 8].map((h) => (
-                      <button
-                        key={h}
-                        type="button"
-                        onClick={() => setDesiredHours(h)}
-                        className={`px-2 py-1 rounded text-xs font-mono font-bold cursor-pointer transition-colors ${
-                          desiredHours === h
-                            ? 'bg-amber-400 text-slate-950 shadow-xs'
-                            : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                        }`}
-                      >
-                        {h}h
-                      </button>
-                    ))}
+                  {/* Inverter Cards Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    {LUMINOUS_INVERTERS.filter((i) => i.id !== 'none').map((inv) => {
+                      const isSelected = loadChosenInverterId === inv.id;
+                      const isOver = totalWatts > inv.watts && totalWatts > 0;
+                      return (
+                        <button
+                          key={inv.id}
+                          type="button"
+                          onClick={() => setLoadChosenInverterId(inv.id)}
+                          className={`p-3 rounded-lg border text-left cursor-pointer transition-all ${
+                            isSelected
+                              ? 'border-amber-500 bg-amber-50/80 ring-1 ring-amber-400 shadow-xs'
+                              : 'border-slate-200 bg-slate-50 hover:bg-white'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between font-bold text-slate-900">
+                            <span>{inv.name}</span>
+                            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-200 text-slate-800">
+                              {inv.type}
+                            </span>
+                          </div>
+                          <div className="text-[11px] text-slate-500 mt-0.5">
+                            Capacity: {inv.va}VA / <strong>{inv.watts} Watts</strong>
+                          </div>
+                          <div className="flex items-center justify-between mt-2 pt-1 border-t border-slate-200/60 font-mono text-[11px]">
+                            <span className="text-slate-600">Rate: ₹{inv.price.toLocaleString()}</span>
+                            {isOver ? (
+                              <span className="text-red-700 font-bold bg-red-100 px-1 rounded">
+                                Overload ({totalWatts}W &gt; {inv.watts}W)
+                              </span>
+                            ) : (
+                              <span className="text-emerald-700 font-bold bg-emerald-50 px-1 rounded">
+                                {totalWatts > 0 ? `${Math.round((totalWatts / inv.watts) * 100)}% Load` : '0% Load'}
+                              </span>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
+
+                  {/* Overload Alert or Compatibility Badge */}
+                  {totalWatts > 0 && (
+                    <div
+                      className={`p-2.5 rounded-lg text-xs font-medium flex items-center justify-between ${
+                        isInverterOverloaded
+                          ? 'bg-red-50 text-red-800 border border-red-300'
+                          : 'bg-emerald-50 text-emerald-900 border border-emerald-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <span>{isInverterOverloaded ? '⚠️' : '✅'}</span>
+                        <span>
+                          {isInverterOverloaded
+                            ? `Overload Warning: ${totalWatts}W exceeds ${loadActiveInverter.name}'s max capacity of ${loadActiveInverter.watts}W. Choose EVO 1250!`
+                            : `Safe: ${loadActiveInverter.name} comfortably supports ${totalWatts}W (${inverterLoadPercentage}% capacity utilized).`}
+                        </span>
+                      </div>
+                      <span className="font-mono font-bold text-[11px]">
+                        Max: {loadActiveInverter.watts}W
+                      </span>
+                    </div>
+                  )}
                 </div>
 
-                {/* Inverter Type Preference */}
-                <div className="bg-white rounded-xl border border-slate-300 p-4 shadow-xs">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-700 block mb-2">
-                    3. Inverter Waveform Type:
-                  </label>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <button
-                      type="button"
-                      onClick={() => setInverterWaveType('sine')}
-                      className={`p-2.5 rounded-lg border text-left cursor-pointer transition-all ${
-                        inverterWaveType === 'sine'
-                          ? 'border-amber-400 bg-amber-50/80 font-bold text-slate-900 shadow-xs'
-                          : 'border-slate-200 bg-white text-slate-600'
-                      }`}
-                    >
-                      <div className="font-bold">Pure Sine Wave</div>
-                      <div className="text-[11px] text-slate-500 mt-0.5">EVO S 1050 / EVO S 1250 (Silent, safe for LED TVs &amp; fans)</div>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setInverterWaveType('square')}
-                      className={`p-2.5 rounded-lg border text-left cursor-pointer transition-all ${
-                        inverterWaveType === 'square'
-                          ? 'border-amber-400 bg-amber-50/80 font-bold text-slate-900 shadow-xs'
-                          : 'border-slate-200 bg-white text-slate-600'
-                      }`}
-                    >
-                      <div className="font-bold">Square Wave</div>
-                      <div className="text-[11px] text-slate-500 mt-0.5">EVO D 1050 / EVO D 1250 (Economical for lighting &amp; basic fans)</div>
-                    </button>
+                {/* Step 3: Choose Battery Option & Compare Backup on Full Load */}
+                <div className="bg-white rounded-xl border border-slate-300 p-4 shadow-xs space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-700 block">
+                        Step 3 · Choose Battery &amp; Compare Backup Time:
+                      </span>
+                      <span className="text-[11px] text-slate-500">
+                        Click any battery to see its backup duration on your {totalWatts}W full load
+                      </span>
+                    </div>
+                    <span className="text-xs font-bold font-mono text-amber-800 bg-amber-100 px-2 py-0.5 rounded">
+                      Selected: {loadActiveBattery.model} ({loadActiveBattery.capacity})
+                    </span>
+                  </div>
+
+                  {/* Quick Battery Selection Grid with Backup Time on THIS Load */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    {popularBackupBatteries.map((battery) => {
+                      const isSelected = loadChosenBatteryId === battery.id;
+                      const batteryWh = battery.capacityAh * 12 * 0.75;
+                      const fullLoadHours = totalWatts > 0 ? (batteryWh / totalWatts).toFixed(1) : '—';
+                      const typicalHours = totalWatts > 0 ? (batteryWh / (totalWatts * 0.7)).toFixed(1) : '—';
+
+                      return (
+                        <button
+                          key={battery.id}
+                          type="button"
+                          onClick={() => setLoadChosenBatteryId(battery.id)}
+                          className={`p-3 rounded-lg border text-left cursor-pointer transition-all flex flex-col justify-between ${
+                            isSelected
+                              ? 'border-amber-500 bg-amber-50/80 ring-1 ring-amber-400 shadow-xs'
+                              : 'border-slate-200 bg-slate-50 hover:bg-white'
+                          }`}
+                        >
+                          <div>
+                            <div className="flex items-center justify-between">
+                              <span className="font-extrabold text-slate-900">{battery.model}</span>
+                              <span className="font-mono font-bold text-amber-800 bg-amber-200/80 px-1.5 py-0.5 rounded text-[11px]">
+                                {battery.capacity}
+                              </span>
+                            </div>
+                            <div className="text-[11px] text-slate-500 mt-0.5">
+                              {battery.warranty} · {battery.category}
+                            </div>
+                          </div>
+
+                          {/* Calculated Backup Duration on THIS Full Load */}
+                          <div className="mt-2.5 pt-2 border-t border-slate-200/80 space-y-1">
+                            <div className="flex items-center justify-between font-mono">
+                              <span className="text-slate-600 font-sans text-[11px]">Full Load ({totalWatts}W):</span>
+                              <span className="font-extrabold text-amber-700 text-xs">
+                                {fullLoadHours !== '—' ? `~${fullLoadHours} Hours` : 'Add Load'}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between font-mono text-[10px] text-slate-500">
+                              <span className="font-sans">Avg Load (~70%):</span>
+                              <span>{typicalHours !== '—' ? `~${typicalHours}h` : '—'}</span>
+                            </div>
+                            <div className="flex items-center justify-between pt-1 border-t border-slate-100 font-mono text-[10px]">
+                              <span className="text-blue-700 font-bold">DP: ₹{battery.dealerPrice.toLocaleString()}</span>
+                              <span className="text-slate-500">MRP: ₹{battery.mrp.toLocaleString()}</span>
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
 
-              {/* Right Column: Sizing Results & 1-Click Load into Quote */}
+              {/* Right Column: Live Backup Results on Full Load & Quotation Link */}
               <div className="lg:col-span-5 bg-slate-900 text-white rounded-xl border border-slate-800 p-5 sm:p-6 shadow-md space-y-5">
                 <div className="pb-3 border-b border-slate-800">
                   <span className="text-[10px] font-mono uppercase tracking-wider text-amber-400 font-bold">
-                    Calculated Power Sizing
+                    Live Runtime Calculation
                   </span>
                   <h3 className="text-base font-extrabold text-white mt-0.5">
-                    Recommended Backup Package
+                    Backup Duration on Full Load
                   </h3>
                 </div>
 
-                {/* Metrics */}
-                <div className="grid grid-cols-2 gap-3 text-xs">
+                {/* Primary Backup Result Display */}
+                <div className="p-4 rounded-xl bg-gradient-to-br from-amber-400/20 via-amber-400/10 to-transparent border border-amber-400/40 text-center">
+                  <div className="text-xs text-amber-200 font-semibold uppercase tracking-wider">
+                    Full Load Backup ({totalWatts} Watts)
+                  </div>
+                  <div className="text-4xl sm:text-5xl font-black font-mono text-amber-400 my-1">
+                    {totalWatts > 0 ? `${backupHoursFullLoad}` : '0'}{' '}
+                    <span className="text-lg font-sans font-normal text-amber-200">Hours</span>
+                  </div>
+                  <div className="text-xs text-slate-300">
+                    Continuous 100% full running load of all selected appliances
+                  </div>
+                  <div className="mt-2 pt-2 border-t border-amber-400/20 flex items-center justify-between text-xs font-mono text-amber-300 px-1">
+                    <span>Average (~70% Load):</span>
+                    <span className="font-bold">~{backupHoursTypicalLoad} Hours</span>
+                  </div>
+                </div>
+
+                {/* Chosen Hardware Overview */}
+                <div className="space-y-2 text-xs">
+                  {/* Inverter */}
                   <div className="p-3 bg-slate-800 rounded-lg border border-slate-700">
-                    <div className="text-[11px] text-slate-400">Total Running Load:</div>
-                    <div className="text-xl font-bold font-mono text-white mt-0.5">
-                      {totalWatts} <span className="text-xs font-normal text-slate-400">Watts</span>
+                    <div className="flex items-center justify-between text-[11px] text-amber-400 font-bold uppercase tracking-wider">
+                      <span>Inverter: {loadActiveInverter.name}</span>
+                      <span className="font-mono text-slate-300">{loadActiveInverter.type}</span>
+                    </div>
+                    <div className="text-white font-bold mt-1">
+                      Capacity: {loadActiveInverter.va}VA / {loadActiveInverter.watts}W
+                    </div>
+                    <div className="text-[11px] mt-0.5 flex items-center justify-between">
+                      <span className={isInverterOverloaded ? 'text-red-400 font-bold' : 'text-emerald-400'}>
+                        {isInverterOverloaded ? '⚠️ Overloaded' : `✅ Safe (${inverterLoadPercentage}% Load)`}
+                      </span>
+                      <span className="text-slate-400 font-mono">Est: ₹{loadActiveInverter.price.toLocaleString()}</span>
                     </div>
                   </div>
-                  <div className="p-3 bg-slate-800 rounded-lg border border-slate-700">
-                    <div className="text-[11px] text-slate-400">Estimated Runtime:</div>
-                    <div className="text-xl font-bold font-mono text-amber-400 mt-0.5">
-                      ~{estimatedBackupHours} <span className="text-xs font-normal text-slate-400">Hours</span>
+
+                  {/* Battery */}
+                  <div className="p-3 bg-slate-800 rounded-lg border border-amber-500/40">
+                    <div className="flex items-center justify-between text-[11px] text-amber-400 font-bold uppercase tracking-wider">
+                      <span>Battery: Prycal {loadActiveBattery.model}</span>
+                      <span className="font-mono text-emerald-400">{loadActiveBattery.capacity}</span>
+                    </div>
+                    <div className="text-white font-bold mt-1">
+                      Warranty: {loadActiveBattery.warranty}
+                    </div>
+                    <div className="text-[11px] text-slate-400 mt-0.5">
+                      Usable Energy: {Math.round(usableBatteryWattHours)} Watt-hours (12V × 0.75 DoD)
+                    </div>
+                    <div className="flex items-center justify-between pt-1 mt-1 border-t border-slate-700 text-[11px] font-mono">
+                      <span className="text-blue-400 font-bold">DP: ₹{loadActiveBattery.dealerPrice.toLocaleString()}</span>
+                      <span className="text-slate-400">MRP: ₹{loadActiveBattery.mrp.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Recommended Inverter */}
-                <div className="p-3.5 bg-slate-800 rounded-lg border border-slate-700 space-y-1">
-                  <div className="text-[11px] font-bold text-amber-400 uppercase tracking-wider flex items-center justify-between">
-                    <span>1. Recommended Inverter</span>
-                    <span className="font-mono text-slate-300">{recommendedInverter.type}</span>
-                  </div>
-                  <div className="text-sm font-extrabold text-white">
-                    {recommendedInverter.name} ({recommendedInverter.va}VA / {recommendedInverter.watts}W)
-                  </div>
-                  <div className="text-[11px] text-slate-400">
-                    Est. Market Rate: ₹{recommendedInverter.price.toLocaleString()}
-                  </div>
-                </div>
-
-                {/* Recommended Battery */}
-                <div className="p-3.5 bg-slate-800 rounded-lg border border-amber-500/40 space-y-1">
-                  <div className="text-[11px] font-bold text-amber-400 uppercase tracking-wider flex items-center justify-between">
-                    <span>2. Recommended Prycal Battery</span>
-                    <span className="font-mono text-emerald-400">{recommendedBatteryModel.capacity}</span>
-                  </div>
-                  <div className="text-sm font-extrabold text-white">
-                    Prycal {recommendedBatteryModel.model}
-                  </div>
-                  <div className="text-[11px] text-slate-400">
-                    Warranty: {recommendedBatteryModel.warranty} · Energy required: {batteryAhNeeded}Ah
-                  </div>
-                  <div className="flex items-center gap-2 pt-1 text-xs font-mono">
-                    <span className="text-slate-400 line-through">MRP: ₹{recommendedBatteryModel.mrp.toLocaleString()}</span>
-                    <span className="text-blue-400 font-bold">DP: ₹{recommendedBatteryModel.dealerPrice.toLocaleString()}</span>
-                  </div>
-                </div>
-
-                {/* Prominent Action Button: Transfer to Quote */}
+                {/* Action Buttons: Apply to Quote or WhatsApp */}
                 <div className="pt-2 border-t border-slate-800 space-y-2">
                   <button
                     type="button"
                     onClick={handleApplyLoadToQuote}
                     className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs sm:text-sm font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 rounded-lg shadow-sm transition-all cursor-pointer"
                   >
-                    <span>👉 Apply to Calculate Quote</span>
+                    <span>👉 Apply this Inverter &amp; Battery to Quotation</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
-                  <p className="text-[11px] text-slate-400 text-center">
-                    Transfers this {recommendedBatteryModel.capacity} battery &amp; {recommendedInverter.name} into the quotation generator with 1 click.
+
+                  <a
+                    href={generateLoadBackupWhatsApp()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors cursor-pointer"
+                  >
+                    <MessageCircle className="w-4 h-4 text-emerald-400" />
+                    <span>Share Backup Calculation on WhatsApp</span>
+                  </a>
+
+                  <p className="text-[10px] text-slate-400 text-center">
+                    Formula: Backup Hours = (Battery Ah × 12V × 0.75 DoD) / Total Running Watts
                   </p>
                 </div>
               </div>
