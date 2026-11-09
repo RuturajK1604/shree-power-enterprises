@@ -1,131 +1,151 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { businessInfo } from '../data/businessData';
-import { Phone, Menu, X, Zap } from 'lucide-react';
+import { Sparkles, Zap, ShieldCheck, Tag, Truck, RefreshCw, Phone } from 'lucide-react';
 import { ShreePowerLogo } from './ShreePowerLogo';
 
-interface HeaderProps {
-  onOpenQuickQuote?: () => void;
+interface TaglineItem {
+  id: string;
+  badge: string;
+  prefix: string;
+  highlight: string;
+  suffix: string;
+  icon: React.ReactNode;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onOpenQuickQuote }) => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+const TAGLINES: TaglineItem[] = [
+  {
+    id: 'distributor',
+    badge: 'Authorised',
+    prefix: 'Regional Distributor for',
+    highlight: 'Prycal Batteries',
+    suffix: 'in Ahilyanagar',
+    icon: <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />,
+  },
+  {
+    id: 'pricing',
+    badge: 'Special Offer',
+    prefix: 'Direct Factory Supply with',
+    highlight: '10% Less in MRP',
+    suffix: 'on Prycal Models',
+    icon: <Tag className="w-3.5 h-3.5 text-emerald-500" />,
+  },
+  {
+    id: 'inverters',
+    badge: 'Luminous Dealer',
+    prefix: 'Official Stockist for',
+    highlight: 'Luminous EVO Inverters',
+    suffix: '(Sine & Square Wave)',
+    icon: <Sparkles className="w-3.5 h-3.5 text-amber-500" />,
+  },
+  {
+    id: 'delivery',
+    badge: 'Fast Support',
+    prefix: 'Free Doorstep Delivery &',
+    highlight: '30-Min Fast Fitment',
+    suffix: 'in Savedi & City',
+    icon: <Truck className="w-3.5 h-3.5 text-blue-500" />,
+  },
+  {
+    id: 'scrap',
+    badge: 'Scrap Exchange',
+    prefix: 'Get Maximum Cash Value with',
+    highlight: 'Old Battery Buyback',
+    suffix: 'Guaranteed',
+    icon: <RefreshCw className="w-3.5 h-3.5 text-emerald-500" />,
+  },
+  {
+    id: 'contact-call',
+    badge: 'Call On-Demand',
+    prefix: 'Connect with Sanjay & Ruturaj Kulkarni at',
+    highlight: '+91 94224 64766',
+    suffix: '· Savedi, Ahilyanagar',
+    icon: <Phone className="w-3.5 h-3.5 text-amber-500" />,
+  },
+];
+
+export const Header: React.FC = () => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [stage, setStage] = useState<'entering' | 'visible' | 'exiting'>('visible');
+
+  useEffect(() => {
+    // Sequence: visible for 3200ms -> exiting for 500ms -> update index and entering for 500ms -> visible
+    const displayTimer = setTimeout(() => {
+      setStage('exiting');
+      
+      const changeTimer = setTimeout(() => {
+        setCurrentIndex((prev) => (prev + 1) % TAGLINES.length);
+        setStage('entering');
+        
+        const enterTimer = setTimeout(() => {
+          setStage('visible');
+        }, 50);
+
+        return () => clearTimeout(enterTimer);
+      }, 400);
+
+      return () => clearTimeout(changeTimer);
+    }, 3200);
+
+    return () => clearTimeout(displayTimer);
+  }, [currentIndex]);
+
+  const activeTagline = TAGLINES[currentIndex];
+
+  // Visual effects classes according to animation stage
+  const getAnimationClasses = () => {
+    switch (stage) {
+      case 'entering':
+        return 'opacity-0 translate-y-3.5 scale-95 blur-xs';
+      case 'visible':
+        return 'opacity-100 translate-y-0 scale-100 blur-none';
+      case 'exiting':
+        return 'opacity-0 -translate-y-3.5 scale-95 blur-xs';
+      default:
+        return 'opacity-100 translate-y-0 scale-100';
+    }
+  };
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200">
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-2xs">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-between gap-8 h-16">
-          {/* Zone 1: Logo with smooth scroll back to top of website */}
-          <ShreePowerLogo onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} />
-
-          {/* Zone 2: 4–5 single-line nav links with whitespace-nowrap shrink-0 */}
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
-            <a href="#products" className="hover:text-slate-900 transition-colors whitespace-nowrap shrink-0">
-              Products
-            </a>
-            <a href="#calculator" className="hover:text-slate-900 transition-colors whitespace-nowrap shrink-0">
-              Power Calculator
-            </a>
-            <a href="#vehicle-finder" className="hover:text-slate-900 transition-colors whitespace-nowrap shrink-0">
-              Vehicle Finder
-            </a>
-            <a href="#services" className="hover:text-slate-900 transition-colors whitespace-nowrap shrink-0">
-              Services
-            </a>
-            <a href="#about" className="hover:text-slate-900 transition-colors whitespace-nowrap shrink-0">
-              About &amp; Wholesale
-            </a>
-            <a href="#contact" className="hover:text-slate-900 transition-colors whitespace-nowrap shrink-0">
-              Location
-            </a>
-          </nav>
-
-          {/* Zone 3: 1 primary action button (§2) */}
-          <div className="hidden sm:flex items-center gap-3 shrink-0">
-            <a
-              href={`tel:${businessInfo.contacts[0].phone}`}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 rounded-lg shadow-2xs transition-colors whitespace-nowrap shrink-0"
-            >
-              <Phone className="w-3.5 h-3.5" />
-              <span>Call: +91 94224 64766</span>
-            </a>
+        <div className="flex items-center justify-between gap-4 h-16 sm:h-18">
+          {/* Logo with smooth scroll to top */}
+          <div className="shrink-0">
+            <ShreePowerLogo onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} />
           </div>
 
-          {/* Mobile hamburger */}
-          <div className="flex md:hidden items-center gap-2">
-            <a
-              href={`tel:${businessInfo.contacts[0].phone}`}
-              aria-label="Call Sanjay Kulkarni"
-              className="p-2 text-slate-700 bg-amber-400 rounded-lg"
+          {/* Continuous Appearing & Disappearing Animated Tagline (Replaces Redirections) */}
+          <div className="flex-1 flex items-center justify-end overflow-hidden pl-2">
+            <div
+              className={`flex items-center gap-2 sm:gap-3 py-1.5 px-3 sm:px-4 rounded-full bg-gradient-to-r from-amber-50/80 via-slate-50 to-amber-50/60 border border-amber-200/70 shadow-xs transition-all duration-400 ease-out select-none cursor-default ${getAnimationClasses()}`}
             >
-              <Phone className="w-4 h-4 text-slate-950" />
-            </a>
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 text-slate-600 hover:text-slate-900 rounded-md"
-              aria-label="Toggle navigation menu"
-            >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-          </div>
-        </div>
+              {/* Pulsing Accent Glow Icon */}
+              <div className="relative flex items-center justify-center w-6 h-6 rounded-full bg-white shadow-xs border border-amber-300/60 shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-25" />
+                {activeTagline.icon}
+              </div>
 
-        {/* Mobile dropdown */}
-        {mobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-slate-100 space-y-2">
-            <a
-              href="#products"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-md"
-            >
-              Products &amp; Inverters
-            </a>
-            <a
-              href="#calculator"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-md"
-            >
-              Inverter Backup Calculator
-            </a>
-            <a
-              href="#vehicle-finder"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-md"
-            >
-              Vehicle Battery Finder
-            </a>
-            <a
-              href="#services"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-md"
-            >
-              Services &amp; Testing
-            </a>
-            <a
-              href="#about"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-md"
-            >
-              About &amp; Wholesale Supply
-            </a>
-            <a
-              href="#contact"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-md"
-            >
-              Shop Location &amp; Savedi Map
-            </a>
-            <div className="pt-2 px-3">
-              <a
-                href={`https://wa.me/${businessInfo.contacts[0].whatsapp}?text=${encodeURIComponent('Hello Shree Power Enterprises, I am contacting you from your website.')}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full block text-center py-2 text-xs font-bold text-slate-950 bg-amber-400 rounded-lg"
-              >
-                Chat on WhatsApp (+91 94224 64766)
-              </a>
+              {/* Tagline Content */}
+              <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium text-slate-700 whitespace-nowrap overflow-hidden text-ellipsis">
+                <span className="hidden md:inline-block text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-100/90 px-2 py-0.5 rounded-full border border-amber-300/50">
+                  {activeTagline.badge}
+                </span>
+
+                <span className="hidden sm:inline text-slate-600">
+                  {activeTagline.prefix}
+                </span>
+
+                <span className="font-extrabold text-slate-900 bg-gradient-to-r from-amber-600 to-amber-800 bg-clip-text text-transparent">
+                  {activeTagline.highlight}
+                </span>
+
+                <span className="text-slate-600 hidden lg:inline">
+                  {activeTagline.suffix}
+                </span>
+              </div>
             </div>
           </div>
-        )}
+        </div>
       </div>
     </header>
   );
