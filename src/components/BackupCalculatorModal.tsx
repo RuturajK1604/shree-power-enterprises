@@ -1,5 +1,5 @@
 import React, { useState, useId } from 'react';
-import { X, Zap, Clock, ShieldCheck, MessageCircle, RotateCcw, ArrowRight, HelpCircle, Calculator, BookOpen, Check } from 'lucide-react';
+import { X, Zap, Clock, ShieldCheck, MessageCircle, RotateCcw, ArrowRight, HelpCircle, Calculator, BookOpen, Check, Award } from 'lucide-react';
 import { businessInfo } from '../data/businessData';
 
 interface Appliance {
@@ -37,6 +37,7 @@ interface BackupCalculatorModalProps {
 export const BackupCalculatorModal: React.FC<BackupCalculatorModalProps> = ({ isOpen, onClose }) => {
   const [appliances, setAppliances] = useState<Appliance[]>(DEFAULT_APPLIANCES);
   const [desiredHours, setDesiredHours] = useState<number>(4);
+  const [inverterWaveType, setInverterWaveType] = useState<'sine' | 'square'>('sine');
   const [activeTab, setActiveTab] = useState<'calculator' | 'constants'>('calculator');
   const hoursSliderId = useId();
 
@@ -51,43 +52,61 @@ export const BackupCalculatorModal: React.FC<BackupCalculatorModalProps> = ({ is
   const resetDefaults = () => {
     setAppliances(DEFAULT_APPLIANCES);
     setDesiredHours(4);
+    setInverterWaveType('sine');
   };
 
   // Calculations
   const totalWatts = appliances.reduce((sum, item) => sum + item.count * item.watts, 0);
   const activeAppliancesCount = appliances.reduce((sum, item) => sum + item.count, 0);
 
-  // Inverter VA: (Total Watts / Power Factor 0.8) * Safety Margin 1.25
-  const recommendedVA = totalWatts > 0 ? Math.ceil((totalWatts / CALCULATION_CONSTANTS.powerFactor) * CALCULATION_CONSTANTS.safetySurgeMargin) : 0;
+  // Inverter Sizing: strictly between Luminous 1050 and Luminous 1250 as configured by Shree Power
+  // Threshold: Luminous 1050 handles up to ~650W comfortably (with surge margin); loads above ~650W recommend Luminous 1250
+  let recommendedInverterModel = 'Luminous 1050';
+  let inverterCapacityNote = 'Capacity: 900VA / ~756 Watts (Ideal for up to 3 Fans + 4 LED Lights + TV)';
 
-  // Inverter Model Selection
-  let recommendedInverter = 'Luminous Zelio+ 1100 Pure Sine Wave (900VA / 756W)';
-  if (recommendedVA > 900 && recommendedVA <= 1500) {
-    recommendedInverter = 'Luminous Eco Volt Neo 1650 (1500VA / 1260W)';
-  } else if (recommendedVA > 1500) {
-    recommendedInverter = 'Luminous Cruze 2.5kVA / 24V Heavy Duty Commercial UPS';
+  if (totalWatts > 650) {
+    recommendedInverterModel = 'Luminous 1250';
+    inverterCapacityNote = 'Capacity: 1100VA / ~924 Watts (High Surge for Mixers, Multiple Fans & Heavy Load)';
   }
 
-  // Energy Needed = Total Watts * Desired Hours
-  // Usable battery energy per Ah at 12V = 12V * 0.75 (DoD) = 9 Watt-hours per Ah
+  const waveLabel = inverterWaveType === 'sine' ? 'Pure Sine Wave' : 'Square Wave';
+  const fullInverterName = `${recommendedInverterModel} ${waveLabel}`;
+
+  // Battery Ah Calculation: Energy needed (Wh) / (12V * 0.75 DoD)
   const requiredWattHours = totalWatts * desiredHours;
   const batteryAhNeeded = totalWatts > 0 ? Math.ceil(requiredWattHours / (CALCULATION_CONSTANTS.systemVoltage * CALCULATION_CONSTANTS.depthOfDischarge)) : 0;
 
-  let recommendedBattery = 'Prycal PowerPlus 150Ah Tall Tubular (PTT-15060)';
+  // Battery recommendation: Strictly official Prycal Tall Tubular models with 10% less in MRP
+  let recommendedBattery = 'Prycal P 150 TT 60 (150Ah Tall Tubular)';
+  let batteryMRP = 17034;
+  let batteryOfferPrice = 15331;
   let estimatedBackupTime = '4.5 Hours';
+  let batteryWarranty = '60 Months (30+30)';
 
   if (batteryAhNeeded <= 120) {
-    recommendedBattery = 'Prycal 120Ah or 150Ah Tall Tubular';
-    estimatedBackupTime = totalWatts > 0 ? `${(150 * 12 * 0.75 / totalWatts).toFixed(1)} Hours` : '0 Hours';
+    recommendedBattery = 'Prycal P 110 TT 60 (110Ah Tall Tubular)';
+    batteryMRP = 13854;
+    batteryOfferPrice = 12469; // 10% less in MRP
+    batteryWarranty = '60 Months (30+30)';
+    estimatedBackupTime = totalWatts > 0 ? `${(110 * 12 * 0.75 / totalWatts).toFixed(1)} Hours` : '0 Hours';
   } else if (batteryAhNeeded <= 170) {
-    recommendedBattery = 'Prycal PowerPlus 150Ah Tall Tubular (PTT-15060)';
+    recommendedBattery = 'Prycal P 150 TT 60 (150Ah Tall Tubular)';
+    batteryMRP = 17034;
+    batteryOfferPrice = 15331; // 10% less in MRP
+    batteryWarranty = '60 Months (30+30)';
     estimatedBackupTime = totalWatts > 0 ? `${(150 * 12 * 0.75 / totalWatts).toFixed(1)} Hours` : '0 Hours';
   } else if (batteryAhNeeded <= 230) {
-    recommendedBattery = 'Prycal MaxDuty 200Ah Tall Tubular (PTT-20072)';
+    recommendedBattery = 'Prycal P 200 TT 60 (200Ah Tall Tubular)';
+    batteryMRP = 21193;
+    batteryOfferPrice = 19074; // 10% less in MRP
+    batteryWarranty = '60 Months (30+30)';
     estimatedBackupTime = totalWatts > 0 ? `${(200 * 12 * 0.75 / totalWatts).toFixed(1)} Hours` : '0 Hours';
   } else {
-    recommendedBattery = 'Twin 150Ah / 200Ah Prycal Tubular Batteries (24V Setup)';
-    estimatedBackupTime = totalWatts > 0 ? `${(300 * 12 * 0.75 / totalWatts).toFixed(1)} Hours` : '0 Hours';
+    recommendedBattery = 'Prycal P 250 TT 60 (250Ah Tall Tubular)';
+    batteryMRP = 26224;
+    batteryOfferPrice = 23602; // 10% less in MRP
+    batteryWarranty = '60 Months (30+30)';
+    estimatedBackupTime = totalWatts > 0 ? `${(250 * 12 * 0.75 / totalWatts).toFixed(1)} Hours` : '0 Hours';
   }
 
   const generateWhatsAppMessage = () => {
@@ -96,7 +115,7 @@ export const BackupCalculatorModal: React.FC<BackupCalculatorModalProps> = ({ is
       .map((a) => `${a.name}: ${a.count}`)
       .join(', ');
 
-    const text = `Hello Shree Power Enterprises, I calculated my power backup requirements on your website.\n\nRunning Load: ${totalWatts} Watts (${applianceList || 'Custom Load'}).\nTarget Duration: ${desiredHours} Hours.\nCalculated Inverter: ${recommendedInverter}.\nRecommended Battery: ${recommendedBattery}.\n\nPlease provide your best discounted price with old battery trade-in and installation in Ahilyanagar.`;
+    const text = `Hello Shree Power Enterprises, I calculated my power backup requirements on your website:\n\n*Running Load:* ${totalWatts} Watts (${applianceList || 'Custom Load'}).\n*Desired Duration:* ${desiredHours} Hours.\n*Recommended Inverter:* ${fullInverterName}\n*Recommended Battery:* ${recommendedBattery}\n*Battery MRP:* ₹${batteryMRP.toLocaleString()}\n*10% Off Offer Price:* ₹${batteryOfferPrice.toLocaleString()} (Warranty: ${batteryWarranty})\n\nPlease share your combo package price with doorstep installation in Ahilyanagar.`;
     return `https://wa.me/${businessInfo.contacts[0].whatsapp}?text=${encodeURIComponent(text)}`;
   };
 
@@ -105,16 +124,26 @@ export const BackupCalculatorModal: React.FC<BackupCalculatorModalProps> = ({ is
       <div className="bg-white rounded-2xl max-w-4xl w-full my-auto shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
         {/* Modal Header */}
         <div className="p-4 sm:p-6 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-amber-400 text-slate-950 rounded-lg font-bold">
-              <Zap className="w-5 h-5" />
-            </div>
+          <div className="flex items-center gap-3">
+            <img
+              src="/src/assets/images/prycal/prycal_logo.png"
+              alt="Prycal Batteries Logo"
+              className="h-8 w-auto bg-white/10 rounded px-1.5 py-0.5 object-contain"
+              onError={(e) => {
+                (e.target as HTMLElement).style.display = 'none';
+              }}
+            />
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">
-                Inverter &amp; Battery Power Backup Calculator
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">
+                  Inverter &amp; Prycal Battery Backup Calculator
+                </h2>
+                <span className="text-[10px] font-bold text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded border border-amber-400/30">
+                  Authorised Distributor
+                </span>
+              </div>
               <p className="text-xs text-slate-400 hidden sm:block">
-                Exact electrical sizing for homes &amp; shops in Ahilyanagar
+                Tailored for Luminous 1050 / 1250 inverters &amp; authentic Prycal tall tubular batteries in Ahilyanagar
               </p>
             </div>
           </div>
@@ -145,18 +174,18 @@ export const BackupCalculatorModal: React.FC<BackupCalculatorModalProps> = ({ is
               onClick={() => setActiveTab('calculator')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-colors ${
                 activeTab === 'calculator'
-                  ? 'bg-amber-400 text-slate-950 shadow-xs'
+                  ? 'bg-amber-400 text-slate-950 shadow-xs font-bold'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               <Calculator className="w-3.5 h-3.5" />
-              Backup Calculator
+              Backup Sizer
             </button>
             <button
               onClick={() => setActiveTab('constants')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-colors ${
                 activeTab === 'constants'
-                  ? 'bg-slate-900 text-white shadow-xs'
+                  ? 'bg-slate-900 text-white shadow-xs font-bold'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -165,8 +194,8 @@ export const BackupCalculatorModal: React.FC<BackupCalculatorModalProps> = ({ is
             </button>
           </div>
 
-          <div className="text-xs text-slate-500 font-mono hidden sm:block">
-            {totalWatts}W Running Load · {desiredHours}h Desired
+          <div className="text-xs text-slate-600 font-mono hidden sm:block">
+            {totalWatts}W Total Load · {desiredHours}h Desired Duration
           </div>
         </div>
 
@@ -174,8 +203,9 @@ export const BackupCalculatorModal: React.FC<BackupCalculatorModalProps> = ({ is
         <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-6">
           {activeTab === 'calculator' ? (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-              {/* Left Column: Appliance Matrix & Hours Slider */}
+              {/* Left Column: Appliance Matrix, Hours Slider & Inverter Waveform Selector */}
               <div className="lg:col-span-7 space-y-5">
+                {/* Step 1: Appliances */}
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-xs font-bold uppercase tracking-wider text-slate-800">
@@ -229,14 +259,64 @@ export const BackupCalculatorModal: React.FC<BackupCalculatorModalProps> = ({ is
                   </div>
                 </div>
 
-                {/* Slider for Hours */}
+                {/* Step 2: Inverter Waveform Selector */}
+                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-800">
+                      Step 2: Choose Luminous Inverter Technology
+                    </span>
+                    <span className="text-[11px] font-bold text-amber-700">
+                      Luminous 1050 or 1250 Options
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setInverterWaveType('sine')}
+                      className={`p-3 rounded-lg border text-left transition-all ${
+                        inverterWaveType === 'sine'
+                          ? 'border-amber-500 bg-white shadow-xs'
+                          : 'border-slate-200 bg-white/70 hover:bg-white text-slate-600'
+                      }`}
+                    >
+                      <div className="text-xs font-bold text-slate-900 flex items-center justify-between">
+                        <span>Pure Sine Wave</span>
+                        {inverterWaveType === 'sine' && <Check className="w-3.5 h-3.5 text-amber-600" />}
+                      </div>
+                      <p className="text-[10px] text-slate-500 mt-0.5">
+                        Noiseless ceiling fan operation &amp; safe for LED TVs, laptops &amp; circuit boards.
+                      </p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setInverterWaveType('square')}
+                      className={`p-3 rounded-lg border text-left transition-all ${
+                        inverterWaveType === 'square'
+                          ? 'border-amber-500 bg-white shadow-xs'
+                          : 'border-slate-200 bg-white/70 hover:bg-white text-slate-600'
+                      }`}
+                    >
+                      <div className="text-xs font-bold text-slate-900 flex items-center justify-between">
+                        <span>Square Wave</span>
+                        {inverterWaveType === 'square' && <Check className="w-3.5 h-3.5 text-amber-600" />}
+                      </div>
+                      <p className="text-[10px] text-slate-500 mt-0.5">
+                        Economical budget option; reliable for basic lighting, bulb &amp; fan backup.
+                      </p>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Step 3: Desired Backup Hours */}
                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
                   <div className="flex items-center justify-between mb-2">
                     <label htmlFor={hoursSliderId} className="text-xs font-bold uppercase tracking-wider text-slate-800">
-                      Step 2: Desired Backup Duration
+                      Step 3: Desired Backup Duration
                     </label>
                     <span className="text-sm font-extrabold font-mono text-amber-700 bg-amber-100/70 px-2.5 py-0.5 rounded">
-                      {desiredHours} Hours Required
+                      {desiredHours} Hours Backup
                     </span>
                   </div>
                   <input
@@ -253,29 +333,30 @@ export const BackupCalculatorModal: React.FC<BackupCalculatorModalProps> = ({ is
                     <span>1h (Minimal)</span>
                     <span>4h (Average Loadshedding)</span>
                     <span>8h (Overnight)</span>
-                    <span>10h (Heavy)</span>
+                    <span>10h (Long Cut)</span>
                   </div>
                 </div>
               </div>
 
-              {/* Right Column: Calculations & Recommended Package */}
+              {/* Right Column: Recommendations with Authentic Prycal Battery Image & Price */}
               <div className="lg:col-span-5 bg-slate-900 text-white p-5 sm:p-6 rounded-xl border border-slate-800 flex flex-col justify-between space-y-5">
                 <div>
                   <div className="flex items-center justify-between pb-3 border-b border-slate-800 text-xs">
                     <span className="font-semibold text-amber-400 uppercase tracking-wide">
-                      Calculation Results
+                      Recommended System Package
                     </span>
-                    <span className="font-mono text-slate-400">12V System</span>
+                    <span className="font-mono text-slate-400">Ahilyanagar Ready</span>
                   </div>
 
+                  {/* Metrics */}
                   <div className="grid grid-cols-2 gap-3 my-4">
                     <div className="bg-slate-800 p-3 rounded-lg border border-slate-700">
                       <div className="text-[11px] text-slate-400 flex items-center gap-1">
                         <Zap className="w-3 h-3 text-amber-400" />
-                        Total Running Load
+                        Running Load
                       </div>
                       <div className="text-xl font-bold font-mono text-white mt-0.5">
-                        {totalWatts} <span className="text-xs font-normal text-slate-400">W</span>
+                        {totalWatts} <span className="text-xs font-normal text-slate-400">Watts</span>
                       </div>
                     </div>
 
@@ -290,25 +371,57 @@ export const BackupCalculatorModal: React.FC<BackupCalculatorModalProps> = ({ is
                     </div>
                   </div>
 
-                  {/* Recommendations */}
-                  <div className="space-y-3">
-                    <div className="p-3 bg-slate-800/80 rounded-lg border border-slate-700">
-                      <div className="text-[11px] text-amber-400 font-semibold uppercase tracking-wider">
-                        Recommended Inverter (Min {recommendedVA} VA)
-                      </div>
-                      <div className="text-sm font-bold text-white mt-0.5">{recommendedInverter}</div>
-                      <div className="text-[11px] text-slate-400 mt-0.5">
-                        Includes 25% surge overhead for fan &amp; motor startup currents.
-                      </div>
+                  {/* Inverter Recommendation */}
+                  <div className="p-3.5 bg-slate-800/90 rounded-lg border border-slate-700 mb-3">
+                    <div className="flex items-center justify-between text-[11px] text-amber-400 font-semibold uppercase tracking-wider">
+                      <span>Recommended Inverter</span>
+                      <span className="text-white bg-slate-700 px-1.5 py-0.2 rounded font-mono font-bold">
+                        {waveLabel}
+                      </span>
+                    </div>
+                    <div className="text-sm font-bold text-white mt-1">
+                      {fullInverterName}
+                    </div>
+                    <div className="text-[11px] text-slate-400 mt-0.5">
+                      {inverterCapacityNote}
+                    </div>
+                  </div>
+
+                  {/* Prycal Battery Recommendation with Real Image */}
+                  <div className="p-3.5 bg-slate-800/90 rounded-lg border border-amber-500/40 relative overflow-hidden">
+                    <div className="flex items-center justify-between text-[11px] text-amber-400 font-semibold uppercase tracking-wider mb-2">
+                      <span className="flex items-center gap-1.5">
+                        <Award className="w-3.5 h-3.5 text-amber-400" />
+                        Prycal Authorised Battery
+                      </span>
+                      <span className="text-[10px] text-emerald-400 bg-emerald-950 px-1.5 py-0.5 rounded font-mono border border-emerald-800">
+                        10% Less in MRP
+                      </span>
                     </div>
 
-                    <div className="p-3 bg-slate-800/80 rounded-lg border border-slate-700">
-                      <div className="text-[11px] text-amber-400 font-semibold uppercase tracking-wider">
-                        Recommended Tubular Battery (Min {batteryAhNeeded} Ah)
+                    <div className="flex gap-3 items-center">
+                      <div className="w-16 h-16 rounded-md bg-white/10 overflow-hidden shrink-0 border border-slate-700">
+                        <img
+                          src="/src/assets/images/prycal/prycal_tubular_inverter.jpg"
+                          alt="Prycal Tall Tubular Battery"
+                          className="w-full h-full object-cover"
+                        />
                       </div>
-                      <div className="text-sm font-bold text-white mt-0.5">{recommendedBattery}</div>
-                      <div className="text-[11px] text-slate-400 mt-0.5">
-                        Tall tubular plates engineered for deep discharge in Ahilyanagar.
+                      <div className="flex-1">
+                        <div className="text-sm font-bold text-white leading-tight">
+                          {recommendedBattery}
+                        </div>
+                        <div className="text-[11px] text-slate-400 mt-0.5 font-mono">
+                          Warranty: {batteryWarranty}
+                        </div>
+                        <div className="flex items-center gap-2 mt-1 text-xs">
+                          <span className="text-slate-400 line-through text-[11px]">
+                            MRP ₹{batteryMRP.toLocaleString()}
+                          </span>
+                          <span className="font-extrabold text-amber-400 font-mono">
+                            Offer: ₹{batteryOfferPrice.toLocaleString()}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -322,11 +435,11 @@ export const BackupCalculatorModal: React.FC<BackupCalculatorModalProps> = ({ is
                     className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs sm:text-sm font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 rounded-lg shadow-sm transition-colors"
                   >
                     <MessageCircle className="w-4 h-4" />
-                    Get Best Price on WhatsApp
+                    Get Combo Quote on WhatsApp
                     <ArrowRight className="w-4 h-4" />
                   </a>
                   <p className="text-[11px] text-slate-400 text-center">
-                    Instant quote from Sanjay Kulkarni (+91 94224 64766)
+                    Direct confirmation from Sanjay Kulkarni (+91 94224 64766)
                   </p>
                 </div>
               </div>
@@ -335,7 +448,7 @@ export const BackupCalculatorModal: React.FC<BackupCalculatorModalProps> = ({ is
             /* Formulas & Constants View */
             <div className="space-y-6">
               <div className="p-4 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 leading-relaxed">
-                <span className="font-bold">Transparent Engineering Sizing:</span> Here are the exact electrical values, efficiency ratings, and formulas used by Shree Power Enterprises to ensure your inverter and battery never trip or suffer premature battery failure.
+                <span className="font-bold">Transparent Electrical Standards:</span> Below are the exact engineering formulas, values, and constants configured for Shree Power Enterprises in Savedi, Ahilyanagar.
               </div>
 
               {/* Constants Table */}
@@ -357,38 +470,36 @@ export const BackupCalculatorModal: React.FC<BackupCalculatorModalProps> = ({ is
                     <tr>
                       <td className="px-4 py-2.5 font-bold font-sans text-slate-900">Power Factor (PF)</td>
                       <td className="px-4 py-2.5 text-amber-700 font-bold">0.8</td>
-                      <td className="px-4 py-2.5 font-sans text-slate-600">Household appliances (fans, motors) have inductive reactive components.</td>
+                      <td className="px-4 py-2.5 font-sans text-slate-600">Accounts for inductive reactive loads (ceiling fan motors, transformers).</td>
                     </tr>
                     <tr>
-                      <td className="px-4 py-2.5 font-bold font-sans text-slate-900">Safety &amp; Inrush Factor</td>
+                      <td className="px-4 py-2.5 font-bold font-sans text-slate-900">Safety &amp; Surge Margin</td>
                       <td className="px-4 py-2.5 text-amber-700 font-bold">1.25 (+25%)</td>
-                      <td className="px-4 py-2.5 font-sans text-slate-600">Prevents inverter overload during initial motor startup surges.</td>
+                      <td className="px-4 py-2.5 font-sans text-slate-600">Prevents inverter overload on initial motor startup current peaks.</td>
                     </tr>
                     <tr>
                       <td className="px-4 py-2.5 font-bold font-sans text-slate-900">Battery Depth of Discharge (DoD)</td>
                       <td className="px-4 py-2.5 text-amber-700 font-bold">0.75 (75%)</td>
-                      <td className="px-4 py-2.5 font-sans text-slate-600">Discharging lead-acid tubular batteries beyond 75–80% degrades plate life.</td>
+                      <td className="px-4 py-2.5 font-sans text-slate-600">Tubular lead-acid plates maintain maximum lifespan when DoD is capped at 75%.</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
 
-              {/* Appliance Ratings Reference */}
-              <div>
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-2">
-                  Standard Appliance Wattage Ratings Used:
-                </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
-                  {DEFAULT_APPLIANCES.map((app) => (
-                    <div key={app.id} className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                      <div className="font-bold text-slate-900 flex items-center gap-1.5">
-                        <span>{app.iconText}</span>
-                        <span>{app.name}</span>
-                      </div>
-                      <div className="text-amber-700 font-mono font-bold mt-1">{app.watts} Watts</div>
-                      <div className="text-[11px] text-slate-500 mt-0.5">{app.note}</div>
-                    </div>
-                  ))}
+              {/* Inverter Options Description */}
+              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-2">
+                  Luminous Inverter Models Configured:
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div className="p-3 bg-white rounded-lg border border-slate-200">
+                    <span className="font-bold text-slate-900 block">Luminous 1050 (Sine / Square Wave)</span>
+                    <span className="text-slate-600 block mt-1">Recommended for standard 1–2 BHK homes with loads up to ~650W (fans, LED lights, TV &amp; Wi-Fi).</span>
+                  </div>
+                  <div className="p-3 bg-white rounded-lg border border-slate-200">
+                    <span className="font-bold text-slate-900 block">Luminous 1250 (Sine / Square Wave)</span>
+                    <span className="text-slate-600 block mt-1">Higher surge capacity (1100VA / ~924W) recommended when running mixer grinders, heavy fans, or commercial shop counters.</span>
+                  </div>
                 </div>
               </div>
 
@@ -402,16 +513,12 @@ export const BackupCalculatorModal: React.FC<BackupCalculatorModalProps> = ({ is
                   <span className="text-white font-bold">Total Watts = Σ (Quantity × Appliance Watts)</span>
                 </div>
                 <div className="p-3 bg-slate-800 rounded-lg border border-slate-700">
-                  <span className="text-slate-400 block font-sans text-[11px]">2. Required Inverter Rating:</span>
-                  <span className="text-white font-bold">Inverter VA = (Total Watts / 0.8) × 1.25</span>
-                </div>
-                <div className="p-3 bg-slate-800 rounded-lg border border-slate-700">
-                  <span className="text-slate-400 block font-sans text-[11px]">3. Required Battery Capacity:</span>
+                  <span className="text-slate-400 block font-sans text-[11px]">2. Required Battery Capacity:</span>
                   <span className="text-white font-bold">Energy (Wh) = Total Watts × Desired Hours</span>
                   <span className="text-amber-300 block mt-1">Battery Ah = Energy (Wh) / (12V × 0.75)</span>
                 </div>
                 <div className="p-3 bg-slate-800 rounded-lg border border-slate-700">
-                  <span className="text-slate-400 block font-sans text-[11px]">4. Estimated Runtime:</span>
+                  <span className="text-slate-400 block font-sans text-[11px]">3. Estimated Runtime:</span>
                   <span className="text-white font-bold">Backup Hours = (Battery Ah × 12V × 0.75) / Total Watts</span>
                 </div>
               </div>
@@ -423,7 +530,7 @@ export const BackupCalculatorModal: React.FC<BackupCalculatorModalProps> = ({ is
         <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
           <div className="flex items-center gap-1.5">
             <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <span>Authorised Prycal Distributor · Shop No. 5, Savedi, Ahilyanagar</span>
+            <span>Authorised Prycal Distributor · Savedi, Ahilyanagar</span>
           </div>
           <button
             onClick={onClose}
