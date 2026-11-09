@@ -169,13 +169,12 @@ export const ShopUtilityApp: React.FC = () => {
     msg += `*CHOSEN BATTERY:* Prycal ${loadActiveBattery.model} (${loadActiveBattery.capacity})\n`;
     msg += `• Category: ${loadActiveBattery.category}\n`;
     msg += `• Warranty: ${loadActiveBattery.warranty}\n`;
-    msg += `• Official MRP: ₹${loadActiveBattery.mrp.toLocaleString()}\n`;
-    msg += `• 10% Discount Offer: ₹${Math.round(loadActiveBattery.mrp * 0.9).toLocaleString()}\n`;
     msg += `------------------------------------\n`;
     msg += `*ESTIMATED BACKUP DURATION:*\n`;
     msg += `• *Full Load (${totalWatts}W):* ~${backupHoursFullLoad} Hours\n`;
     msg += `• *Average Everyday Load (~70%):* ~${backupHoursTypicalLoad} Hours\n`;
     msg += `------------------------------------\n`;
+    msg += `_Tap 'Apply to Quote' in portal for official price & scrap quotation._\n`;
     msg += `*Contact:* Sanjay Kulkarni (+91 94224 64766) / Ruturaj Kulkarni (+91 88059 22623)`;
     return `https://wa.me/?text=${encodeURIComponent(msg)}`;
   };
@@ -1019,7 +1018,7 @@ export const ShopUtilityApp: React.FC = () => {
                             Capacity: {inv.va}VA / <strong>{inv.watts} Watts</strong>
                           </div>
                           <div className="flex items-center justify-between mt-2 pt-1 border-t border-slate-200/60 font-mono text-[11px]">
-                            <span className="text-slate-600">Rate: ₹{inv.price.toLocaleString()}</span>
+                            <span className="text-slate-600 font-sans">{inv.type}</span>
                             {isOver ? (
                               <span className="text-red-700 font-bold bg-red-100 px-1 rounded">
                                 Overload ({totalWatts}W &gt; {inv.watts}W)
@@ -1118,9 +1117,9 @@ export const ShopUtilityApp: React.FC = () => {
                               <span className="font-sans">Avg Load (~70%):</span>
                               <span>{typicalHours !== '—' ? `~${typicalHours}h` : '—'}</span>
                             </div>
-                            <div className="flex items-center justify-between pt-1 border-t border-slate-100 font-mono text-[10px]">
-                              <span className="text-blue-700 font-bold">DP: ₹{battery.dealerPrice.toLocaleString()}</span>
-                              <span className="text-slate-500">MRP: ₹{battery.mrp.toLocaleString()}</span>
+                            <div className="flex items-center justify-between pt-1 border-t border-slate-100 text-[10px] text-slate-500 font-sans">
+                              <span>Prycal Tubular</span>
+                              <span className="font-semibold text-amber-700">Tap to select</span>
                             </div>
                           </div>
                         </button>
@@ -1174,7 +1173,7 @@ export const ShopUtilityApp: React.FC = () => {
                       <span className={isInverterOverloaded ? 'text-red-400 font-bold' : 'text-emerald-400'}>
                         {isInverterOverloaded ? '⚠️ Overloaded' : `✅ Safe (${inverterLoadPercentage}% Load)`}
                       </span>
-                      <span className="text-slate-400 font-mono">Est: ₹{loadActiveInverter.price.toLocaleString()}</span>
+                      <span className="text-slate-400 font-sans text-[11px]">12V Home Inverter</span>
                     </div>
                   </div>
 
@@ -1190,9 +1189,8 @@ export const ShopUtilityApp: React.FC = () => {
                     <div className="text-[11px] text-slate-400 mt-0.5">
                       Usable Energy: {Math.round(usableBatteryWattHours)} Watt-hours (12V × 0.75 DoD)
                     </div>
-                    <div className="flex items-center justify-between pt-1 mt-1 border-t border-slate-700 text-[11px] font-mono">
-                      <span className="text-blue-400 font-bold">DP: ₹{loadActiveBattery.dealerPrice.toLocaleString()}</span>
-                      <span className="text-slate-400">MRP: ₹{loadActiveBattery.mrp.toLocaleString()}</span>
+                    <div className="text-[11px] text-amber-300/80 pt-1 mt-1 border-t border-slate-700 font-sans">
+                      💡 Pricing, dealer discounts &amp; scrap exchange calculated in Quotation tab.
                     </div>
                   </div>
                 </div>
