@@ -41,17 +41,17 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenCalculator }) =>
       id: 'slide-1',
       image: '/src/assets/images/prycal/banner-4.jpg',
       kicker: 'Authorised Prycal Distributor · Ahilyanagar',
-      title: 'Powering Ahilyanagar with Authentic Prycal Batteries',
+      title: 'Official Prycal Batteries Distributor for Ahilyanagar',
       description:
-        'Official regional distributor in Savedi. Direct factory-fresh stock with official manufacturer warranty cards, 10% less in MRP offer rates, and fast doorstep delivery.',
+        'Direct factory supply in Savedi. Official Price List with Dealer Price (DP) and MRP, instant quotation calculator with scrap buyback, and fast doorstep delivery across the district.',
       badge: 'Authorised Prycal Distributor',
       primaryAction: {
-        label: 'See Products & Prices',
-        action: () => scrollToSection('products'),
-        icon: <ArrowRight className="w-4 h-4" />,
+        label: 'Calculate Quote (Dealer / Customer)',
+        action: () => scrollToSection('calculator'),
+        icon: <Calculator className="w-4 h-4" />,
       },
       secondaryAction: {
-        label: 'Get Quotation (10% Off)',
+        label: 'View Price List (DP & MRP)',
         href: '#calculator',
       },
     },
@@ -85,16 +85,16 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenCalculator }) =>
       kicker: 'Official October 2026 Price List',
       title: 'Instant Battery Quotation with Scrap Exchange',
       description:
-        'Calculate your instant price across Inverter Tall Tubular, Automotive, Jumbo, Solar C10, and Lithium batteries with 10% less in MRP plus up to ₹3,800 old battery buyback credit.',
-      badge: '10% Less in MRP Applied',
+        'Calculate your instant total amount across Inverter Tall Tubular, Automotive, Jumbo, Solar C10, and Lithium batteries with or without old battery scrap trade-in credit.',
+      badge: 'DP & MRP Price Engine',
       primaryAction: {
-        label: 'Get Instant Quotation',
+        label: 'Open Quotation Engine',
         action: () => scrollToSection('calculator'),
         icon: <FileText className="w-4 h-4" />,
       },
       secondaryAction: {
-        label: 'Vehicle Battery Finder',
-        href: '#vehicle-finder',
+        label: 'Official DP & MRP Price List',
+        href: '#calculator',
       },
     },
     {

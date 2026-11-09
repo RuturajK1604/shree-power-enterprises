@@ -395,7 +395,7 @@ export const BackupCalculatorModal: React.FC<BackupCalculatorModalProps> = ({ is
                         Prycal Authorised Battery
                       </span>
                       <span className="text-[10px] text-emerald-400 bg-emerald-950 px-1.5 py-0.5 rounded font-mono border border-emerald-800">
-                        10% Less in MRP
+                        Authorised Rate
                       </span>
                     </div>
 

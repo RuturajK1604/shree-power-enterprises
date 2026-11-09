@@ -126,7 +126,7 @@ export const Footer: React.FC = () => {
           <div className="flex items-center gap-4">
             <span>Authorised Prycal Distributor</span>
             <span>·</span>
-            <span>Exide &amp; Luminous Solutions</span>
+            <span>Luminous Inverter Solutions</span>
             <span>·</span>
             <span>Ahilyanagar</span>
           </div>

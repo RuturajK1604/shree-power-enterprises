@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { BatteryProduct, productsData, businessInfo } from '../data/businessData';
-import { Shield, Check, Phone, MessageCircle, Info, ExternalLink, X, Zap, BatteryCharging, Sparkles, SlidersHorizontal } from 'lucide-react';
+import { Shield, Check, Phone, MessageCircle, Info, ExternalLink, X, Zap, BatteryCharging, Award, Calculator } from 'lucide-react';
 
 interface InverterProduct {
   id: string;
@@ -159,33 +159,27 @@ const LUMINOUS_INVERTERS: InverterProduct[] = [
 ];
 
 export const ProductCatalog: React.FC = () => {
-  // Main 2 Tabs: "batteries" and "inverter" as requested
+  // Main 2 Tabs: Batteries & Inverters
   const [activeMainTab, setActiveMainTab] = useState<'batteries' | 'inverter'>('batteries');
 
-  // Filters (Only used for Batteries tab)
-  const [selectedBrand, setSelectedBrand] = useState<string>('all');
+  // Category filter for Batteries (No bike/scooter)
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   // Modals
   const [activeModalBattery, setActiveModalBattery] = useState<BatteryProduct | null>(null);
   const [activeModalInverter, setActiveModalInverter] = useState<InverterProduct | null>(null);
 
-  // Filter batteries only (excluding old inverters from battery list)
-  const batteryProductsOnly = productsData.filter((p) => p.category !== 'inverter-ups');
-
-  const filteredBatteries = batteryProductsOnly.filter((product) => {
-    const brandMatch = selectedBrand === 'all' || product.brand.toLowerCase() === selectedBrand.toLowerCase();
-    const categoryMatch = selectedCategory === 'all' || product.category === selectedCategory;
-    return brandMatch && categoryMatch;
+  const filteredBatteries = productsData.filter((product) => {
+    return selectedCategory === 'all' || product.category === selectedCategory;
   });
 
   const getWhatsAppBatteryLink = (product: BatteryProduct) => {
-    const text = `Hello Shree Power Enterprises, I am interested in ${product.brand} - ${product.name} (${product.capacity}, ${product.voltage}).\nPlease share your best discounted offer price and doorstep delivery time in Ahilyanagar.`;
+    const text = `Hello Shree Power Enterprises, I am interested in ${product.name} (${product.capacity}, ${product.voltage}).\nPlease share availability and doorstep installation details in Ahilyanagar.`;
     return `https://wa.me/${businessInfo.contacts[0].whatsapp}?text=${encodeURIComponent(text)}`;
   };
 
   const getWhatsAppInverterLink = (inverter: InverterProduct) => {
-    const text = `Hello Shree Power Enterprises, I want to inquire about Luminous Inverter ${inverter.name} (${inverter.waveform}, ${inverter.vaRating}VA).\nPlease share price and best battery combo recommendation in Ahilyanagar.`;
+    const text = `Hello Shree Power Enterprises, I want to inquire about Luminous Inverter ${inverter.name} (${inverter.waveform}, ${inverter.vaRating}VA).\nPlease share price and best Prycal battery combo recommendation in Ahilyanagar.`;
     return `https://wa.me/${businessInfo.contacts[0].whatsapp}?text=${encodeURIComponent(text)}`;
   };
 
@@ -202,12 +196,12 @@ export const ProductCatalog: React.FC = () => {
               Products: Batteries &amp; Inverters
             </h2>
             <p className="mt-2 text-sm sm:text-base text-slate-600 max-w-2xl">
-              Authorised regional distributor for <strong>Prycal Batteries</strong> with direct factory pricing w.e.f. Oct 2026, alongside genuine <strong>Exide</strong> lines and official <strong>Luminous EVO</strong> inverters in Ahilyanagar.
+              Authorised regional distributor for <strong>Prycal Batteries</strong> with official price list w.e.f. October 2026, alongside certified <strong>Luminous EVO</strong> inverters in Ahilyanagar.
             </p>
           </div>
           <div className="text-xs font-mono text-slate-500 bg-slate-50 px-3 py-1.5 rounded-md border border-slate-200 self-start md:self-auto">
             {activeMainTab === 'batteries'
-              ? `Showing ${filteredBatteries.length} Battery Models`
+              ? `Showing ${filteredBatteries.length} Prycal Battery Models`
               : 'Showing 4 Luminous Inverter Models'}
           </div>
         </div>
@@ -224,8 +218,8 @@ export const ProductCatalog: React.FC = () => {
           >
             <BatteryCharging className={`w-4 h-4 ${activeMainTab === 'batteries' ? 'text-amber-500' : 'text-slate-400'}`} />
             <span>Batteries</span>
-            <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
-              {batteryProductsOnly.length}
+            <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
+              Prycal ({productsData.length})
             </span>
           </button>
 
@@ -239,62 +233,22 @@ export const ProductCatalog: React.FC = () => {
           >
             <Zap className={`w-4 h-4 ${activeMainTab === 'inverter' ? 'text-amber-500' : 'text-slate-400'}`} />
             <span>Inverters</span>
-            <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
-              4 Models
+            <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-800 border border-blue-200">
+              Luminous (4)
             </span>
           </button>
         </div>
 
         {/* ============================================================== */}
-        {/* TAB 1: BATTERIES (Includes Brand & Category Filters)           */}
+        {/* TAB 1: BATTERIES (Prycal Only, Category Filters, No Bikes)     */}
         {/* ============================================================== */}
         {activeMainTab === 'batteries' && (
           <div className="space-y-8 animate-fadeIn">
-            {/* Filter Controls for Batteries */}
-            <div className="space-y-3 p-4 rounded-xl bg-slate-50 border border-slate-200/80">
-              {/* Brand Filter */}
+            {/* Category Filter Pills (No Bike/Scooter) */}
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
               <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-medium">
-                <span className="text-slate-500 font-semibold uppercase tracking-wider text-[11px] whitespace-nowrap">
-                  Brand:
-                </span>
-                <div className="inline-flex p-1 bg-white rounded-lg border border-slate-200">
-                  <button
-                    onClick={() => setSelectedBrand('all')}
-                    className={`px-3 py-1.5 rounded-md transition-colors whitespace-nowrap cursor-pointer ${
-                      selectedBrand === 'all'
-                        ? 'bg-amber-400 text-slate-950 font-bold shadow-xs'
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    All Brands
-                  </button>
-                  <button
-                    onClick={() => setSelectedBrand('prycal')}
-                    className={`px-3 py-1.5 rounded-md transition-colors whitespace-nowrap cursor-pointer ${
-                      selectedBrand === 'prycal'
-                        ? 'bg-amber-400 text-slate-950 font-bold shadow-xs'
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    Prycal (Authorised Distributor)
-                  </button>
-                  <button
-                    onClick={() => setSelectedBrand('exide')}
-                    className={`px-3 py-1.5 rounded-md transition-colors whitespace-nowrap cursor-pointer ${
-                      selectedBrand === 'exide'
-                        ? 'bg-amber-400 text-slate-950 font-bold shadow-xs'
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    Exide Batteries
-                  </button>
-                </div>
-              </div>
-
-              {/* Category Filter */}
-              <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-medium">
-                <span className="text-slate-500 font-semibold uppercase tracking-wider text-[11px] whitespace-nowrap">
-                  Type:
+                <span className="text-slate-500 font-semibold uppercase tracking-wider text-[11px] whitespace-nowrap pl-1">
+                  Category:
                 </span>
                 <div className="inline-flex p-1 bg-white rounded-lg border border-slate-200">
                   <button
@@ -305,7 +259,7 @@ export const ProductCatalog: React.FC = () => {
                         : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
-                    All Categories
+                    All Prycal Batteries
                   </button>
                   <button
                     onClick={() => setSelectedCategory('inverter-battery')}
@@ -318,24 +272,24 @@ export const ProductCatalog: React.FC = () => {
                     Inverter Tall Tubular
                   </button>
                   <button
-                    onClick={() => setSelectedCategory('four-wheeler')}
+                    onClick={() => setSelectedCategory('inverter-jumbo')}
                     className={`px-3 py-1.5 rounded-md transition-colors whitespace-nowrap cursor-pointer ${
-                      selectedCategory === 'four-wheeler'
+                      selectedCategory === 'inverter-jumbo'
+                        ? 'bg-slate-900 text-white font-semibold'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    Inverter Jumbo Tubular
+                  </button>
+                  <button
+                    onClick={() => setSelectedCategory('automotive')}
+                    className={`px-3 py-1.5 rounded-md transition-colors whitespace-nowrap cursor-pointer ${
+                      selectedCategory === 'automotive'
                         ? 'bg-slate-900 text-white font-semibold'
                         : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
                     Car &amp; SUV Batteries
-                  </button>
-                  <button
-                    onClick={() => setSelectedCategory('two-wheeler')}
-                    className={`px-3 py-1.5 rounded-md transition-colors whitespace-nowrap cursor-pointer ${
-                      selectedCategory === 'two-wheeler'
-                        ? 'bg-slate-900 text-white font-semibold'
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    Bike &amp; Scooter
                   </button>
                   <button
                     onClick={() => setSelectedCategory('commercial-tractor')}
@@ -345,7 +299,27 @@ export const ProductCatalog: React.FC = () => {
                         : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
-                    Tractor &amp; Commercial
+                    Tractor &amp; Heavy Commercial
+                  </button>
+                  <button
+                    onClick={() => setSelectedCategory('solar')}
+                    className={`px-3 py-1.5 rounded-md transition-colors whitespace-nowrap cursor-pointer ${
+                      selectedCategory === 'solar'
+                        ? 'bg-slate-900 text-white font-semibold'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    Solar Royal Tubular
+                  </button>
+                  <button
+                    onClick={() => setSelectedCategory('lithium')}
+                    className={`px-3 py-1.5 rounded-md transition-colors whitespace-nowrap cursor-pointer ${
+                      selectedCategory === 'lithium'
+                        ? 'bg-slate-900 text-white font-semibold'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    Lithium LiFePO4
                   </button>
                 </div>
               </div>
@@ -383,8 +357,8 @@ export const ProductCatalog: React.FC = () => {
                     {/* Card Body */}
                     <div className="p-5">
                       <div className="flex items-center gap-2 text-xs text-slate-500 mb-1.5">
-                        <span className="font-semibold text-amber-700 uppercase tracking-wider">
-                          {product.brand}
+                        <span className="font-bold text-amber-700 uppercase tracking-wider">
+                          Prycal Authorised
                         </span>
                         <span aria-hidden="true">·</span>
                         <span>{product.voltage}</span>
@@ -413,16 +387,23 @@ export const ProductCatalog: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Card Footer with Price and Action */}
+                  {/* Card Footer with Price Details: 10% Off Mentioned ONLY Here */}
                   <div className="p-5 pt-0 border-t border-slate-100 flex items-center justify-between gap-3 mt-auto">
                     <div>
-                      <div className="text-[11px] text-slate-400">Offer Price (10% Off)</div>
-                      <div className="text-sm font-extrabold font-mono text-slate-900">
-                        {product.estimatedPriceRange}
+                      <div className="text-[11px] text-slate-400 font-mono line-through">
+                        MRP: ₹{product.mrp.toLocaleString()}
+                      </div>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-base font-black font-mono text-slate-900">
+                          ₹{product.offerPrice.toLocaleString()}
+                        </span>
+                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                          10% off MRP
+                        </span>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => setActiveModalBattery(product)}
                         className="p-2 text-xs font-medium text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors cursor-pointer"
@@ -431,13 +412,24 @@ export const ProductCatalog: React.FC = () => {
                         <Info className="w-4 h-4" />
                       </button>
                       <a
+                        href="#calculator"
+                        onClick={() => {
+                          document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' });
+                        }}
+                        className="inline-flex items-center gap-1 px-2.5 py-2 text-xs font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 rounded-md transition-colors shadow-2xs whitespace-nowrap cursor-pointer"
+                        title="Calculate quote for this battery"
+                      >
+                        <Calculator className="w-3.5 h-3.5" />
+                        Quote
+                      </a>
+                      <a
                         href={getWhatsAppBatteryLink(product)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 px-3 py-2 text-xs font-semibold text-slate-950 bg-amber-400 hover:bg-amber-300 rounded-md transition-colors shadow-2xs whitespace-nowrap cursor-pointer"
+                        className="p-2 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 rounded-md transition-colors border border-emerald-200 cursor-pointer"
+                        title="Chat on WhatsApp"
                       >
                         <MessageCircle className="w-3.5 h-3.5" />
-                        Enquire
                       </a>
                     </div>
                   </div>
@@ -468,7 +460,7 @@ export const ProductCatalog: React.FC = () => {
                 </div>
               </div>
               <div className="text-xs font-semibold text-blue-800 bg-blue-100/80 px-3 py-1 rounded-full border border-blue-200 self-start sm:self-auto">
-                No Price Listed · Call / WhatsApp for Special Shop Offer
+                Call / WhatsApp for Special Shop Offer
               </div>
             </div>
 
@@ -618,7 +610,7 @@ export const ProductCatalog: React.FC = () => {
               Authorised Prycal Battery Distributor in Ahilyanagar
             </h3>
             <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-2xl">
-              Buying directly from the authorised regional distributor guarantees fresh factory-filled battery stock, immediate warranty registration, and the lowest wholesale/retail pricing without middleman markups.
+              Buying directly from the authorised regional distributor guarantees fresh factory-filled battery stock, immediate warranty registration, and transparent pricing without middleman markups.
             </p>
           </div>
           <div className="flex items-center gap-3 shrink-0">
@@ -721,27 +713,39 @@ export const ProductCatalog: React.FC = () => {
 
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-200">
               <div>
-                <div className="text-xs text-slate-500">Offer Price (10% Off MRP)</div>
-                <div className="text-lg font-extrabold font-mono text-slate-900">
-                  {activeModalBattery.estimatedPriceRange}
+                <div className="text-xs text-slate-400 font-mono line-through">
+                  MRP: ₹{activeModalBattery.mrp.toLocaleString()}
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-xl font-extrabold font-mono text-slate-900">
+                    ₹{activeModalBattery.offerPrice.toLocaleString()}
+                  </span>
+                  <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                    10% off MRP
+                  </span>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 w-full sm:w-auto">
+              <div className="flex items-center gap-2.5 w-full sm:w-auto">
                 <a
-                  href={`tel:${businessInfo.contacts[0].phone}`}
-                  className="flex-1 sm:flex-none px-4 py-2.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg text-center transition-colors"
+                  href="#calculator"
+                  onClick={() => {
+                    setActiveModalBattery(null);
+                    document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 rounded-lg shadow-sm transition-colors cursor-pointer"
                 >
-                  Call Specialist
+                  <Calculator className="w-3.5 h-3.5" />
+                  Calculate Quote
                 </a>
                 <a
                   href={getWhatsAppBatteryLink(activeModalBattery)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-5 py-2.5 text-xs font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 rounded-lg shadow-sm transition-colors"
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 rounded-lg border border-emerald-300 transition-colors"
                 >
-                  <MessageCircle className="w-4 h-4" />
-                  WhatsApp Inquiry
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  WhatsApp
                 </a>
               </div>
             </div>

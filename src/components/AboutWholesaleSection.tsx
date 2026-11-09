@@ -36,7 +36,7 @@ export const AboutWholesaleSection: React.FC = () => {
               Founded in 2014 by <strong>Sanjay Kulkarni</strong> and operated alongside <strong>Ruturaj Kulkarni</strong>, <strong>Shree Power Enterprises</strong> has grown into Ahilyanagar’s premier destination for high-performance batteries and pure sine wave power solutions.
             </p>
             <p className="text-sm text-slate-600 leading-relaxed">
-              As the official <strong>Authorised Distributor of Prycal Batteries</strong> in Ahilyanagar district, we bridge the gap between heavy industrial manufacturing precision and everyday customer peace of mind. We also supply genuine Exide batteries and Luminous inverters, delivering unmatched pricing, swift doorstep installation, and honest warranty fulfillment.
+              As the official <strong>Authorised Distributor of Prycal Batteries</strong> in Ahilyanagar district, we bridge the gap between heavy industrial manufacturing precision and everyday customer peace of mind. We also supply certified Luminous inverters, delivering unmatched pricing, swift doorstep installation, and honest warranty fulfillment.
             </p>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-3 font-mono text-center">
@@ -106,7 +106,7 @@ export const AboutWholesaleSection: React.FC = () => {
                 Wholesale &amp; Bulk Battery Supply for Garages, Mechanics &amp; Sub-Dealers
               </h3>
               <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                Are you an automobile workshop owner, electrical shop retailer, tractor dealer, or fleet operator in Ahilyanagar district? Partner with Shree Power Enterprises to get direct distributor pricing on <strong>Prycal</strong> and <strong>Exide</strong> batteries with regular delivery runs and buffer stock protection.
+                Are you an automobile workshop owner, electrical shop retailer, tractor dealer, or fleet operator in Ahilyanagar district? Partner with Shree Power Enterprises to get direct distributor pricing on <strong>Prycal</strong> batteries with regular delivery runs and buffer stock protection.
               </p>
 
               <div className="space-y-2 text-xs text-slate-300 pt-2">

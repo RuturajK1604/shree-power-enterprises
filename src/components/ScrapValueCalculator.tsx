@@ -14,21 +14,12 @@ interface ScrapTier {
 
 const SCRAP_TIERS: ScrapTier[] = [
   {
-    id: 'bike',
-    name: 'Two-Wheeler Battery (2.5Ah – 9Ah)',
-    category: 'Motorcycle & Scooter',
-    typicalWeight: '1.5 – 3.2 kg',
-    estimatedScrapValue: 500,
-    bestFitNew: 'Prycal Rider Pro / Exide Xplore',
-    exampleVehicles: 'Activa, Splendor, Pulsar, Classic 350',
-  },
-  {
     id: 'small-car',
     name: 'Small Car Battery (35Ah – 38Ah)',
     category: 'Hatchback & Compact Car',
     typicalWeight: '9.5 – 11.0 kg',
     estimatedScrapValue: 1800,
-    bestFitNew: 'Prycal DriveMax 35Ah / Exide Epiq 35',
+    bestFitNew: 'Prycal PN 40Z/L (35Ah)',
     exampleVehicles: 'Alto, WagonR, Swift, i10, Kwid, Tiago',
   },
   {
@@ -37,7 +28,7 @@ const SCRAP_TIERS: ScrapTier[] = [
     category: 'Sedan & Compact SUV',
     typicalWeight: '12.0 – 14.5 kg',
     estimatedScrapValue: 2100,
-    bestFitNew: 'Prycal DriveMax 45Ah / Exide Mileage 45',
+    bestFitNew: 'Prycal PN 45ZL (45Ah)',
     exampleVehicles: 'Dzire, Honda City, Creta, Brezza, Nexon',
   },
   {
@@ -46,7 +37,7 @@ const SCRAP_TIERS: ScrapTier[] = [
     category: 'SUV, MUV & Commercial Pickup',
     typicalWeight: '16.0 – 21.0 kg',
     estimatedScrapValue: 2600,
-    bestFitNew: 'Prycal UltraTorque 65Ah / Exide 65D26R',
+    bestFitNew: 'Prycal PN 700R/L (65Ah) / PN 80 (80Ah)',
     exampleVehicles: 'Scorpio, Bolero, Innova, Harrier, Thar',
   },
   {
@@ -55,7 +46,7 @@ const SCRAP_TIERS: ScrapTier[] = [
     category: 'Agricultural & Commercial Trucks',
     typicalWeight: '24.0 – 35.0 kg',
     estimatedScrapValue: 3500,
-    bestFitNew: 'Prycal KisanShakti 100Ah / Exide Jai Kisan',
+    bestFitNew: 'Prycal PN 100 (100Ah) / PN 120 (120Ah)',
     exampleVehicles: 'Mahindra 575 DI, Swaraj 744, Eicher, Tata 407',
   },
   {
@@ -188,7 +179,7 @@ export const ScrapValueCalculator: React.FC = () => {
                   <div className="flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                     <span>
-                      Directly subtracted from your new <strong>Prycal or Exide</strong> battery purchase bill.
+                      Directly subtracted from your new <strong>Prycal</strong> battery purchase bill.
                     </span>
                   </div>
                   <div className="flex items-start gap-2">

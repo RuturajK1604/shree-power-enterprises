@@ -34,7 +34,7 @@ export default function App() {
         {/* 2. Products & Inverter Catalog with Filters & Modal (Moved to top as requested) */}
         <ProductCatalog />
 
-        {/* 3. Interactive Power Tools Hub: 2 Tabs (Calculate Backup & Get Quotation with 10% off MRP) */}
+        {/* 3. Interactive Power Tools Hub: 2 Tabs (Calculate Backup & Get Quotation) */}
         <PowerToolsHub
           isCalculatorModalOpen={isCalculatorModalOpen}
           onOpenCalculator={() => setIsCalculatorModalOpen(true)}

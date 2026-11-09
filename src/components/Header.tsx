@@ -23,9 +23,9 @@ const TAGLINES: TaglineItem[] = [
   },
   {
     id: 'pricing',
-    badge: 'Special Offer',
+    badge: 'Direct Supply',
     prefix: 'Direct Factory Supply with',
-    highlight: '10% Less in MRP',
+    highlight: 'Official Manufacturer Warranty',
     suffix: 'on Prycal Models',
     icon: <Tag className="w-3.5 h-3.5 text-emerald-500" />,
   },
