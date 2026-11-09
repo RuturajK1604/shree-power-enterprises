@@ -4,9 +4,25 @@ import { businessInfo } from '../data/businessData';
 import { PRYCAL_PRICE_LIST, PrycalPriceItem } from '../data/prycalPrices';
 import { BackupCalculatorModal, CALCULATION_CONSTANTS } from './BackupCalculatorModal';
 
-export const PowerToolsHub: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'calculate-backup' | 'get-quotation'>('get-quotation');
-  const [isCalculatorModalOpen, setIsCalculatorModalOpen] = useState(false);
+interface PowerToolsHubProps {
+  isCalculatorModalOpen?: boolean;
+  onOpenCalculator?: () => void;
+  onCloseCalculator?: () => void;
+  initialTab?: 'calculate-backup' | 'get-quotation';
+}
+
+export const PowerToolsHub: React.FC<PowerToolsHubProps> = ({
+  isCalculatorModalOpen: propIsModalOpen,
+  onOpenCalculator,
+  onCloseCalculator,
+  initialTab = 'get-quotation',
+}) => {
+  const [activeTab, setActiveTab] = useState<'calculate-backup' | 'get-quotation'>(initialTab);
+  const [localIsModalOpen, setLocalIsModalOpen] = useState(false);
+
+  const isModalOpen = propIsModalOpen !== undefined ? propIsModalOpen : localIsModalOpen;
+  const handleOpenModal = onOpenCalculator || (() => setLocalIsModalOpen(true));
+  const handleCloseModal = onCloseCalculator || (() => setLocalIsModalOpen(false));
 
   // Quotation Engine State
   const [selectedCategory, setSelectedCategory] = useState<PrycalPriceItem['category']>('Inverter Tall Tubular');
@@ -130,7 +146,7 @@ export const PowerToolsHub: React.FC = () => {
 
                 <div className="pt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                   <button
-                    onClick={() => setIsCalculatorModalOpen(true)}
+                    onClick={handleOpenModal}
                     className="inline-flex items-center justify-center gap-2 px-6 py-3.5 text-sm font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 rounded-xl shadow-sm transition-all hover:scale-[1.01]"
                   >
                     <Calculator className="w-4 h-4" />
@@ -139,7 +155,7 @@ export const PowerToolsHub: React.FC = () => {
                   </button>
 
                   <button
-                    onClick={() => setIsCalculatorModalOpen(true)}
+                    onClick={handleOpenModal}
                     className="inline-flex items-center justify-center gap-1.5 px-4 py-3 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors"
                   >
                     <HelpCircle className="w-4 h-4 text-amber-600" />
@@ -507,8 +523,8 @@ export const PowerToolsHub: React.FC = () => {
 
       {/* Pop-up Modal for Calculate Backup */}
       <BackupCalculatorModal
-        isOpen={isCalculatorModalOpen}
-        onClose={() => setIsCalculatorModalOpen(false)}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
       />
     </section>
   );

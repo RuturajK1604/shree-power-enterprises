@@ -19,18 +19,24 @@ import { businessInfo } from './data/businessData';
 import { Phone, MessageCircle } from 'lucide-react';
 
 export default function App() {
+  const [isCalculatorModalOpen, setIsCalculatorModalOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-white text-slate-900 flex flex-col font-sans selection:bg-amber-100 selection:text-amber-900">
-      {/* Top Bar Header (§2 Top Bar Contract) */}
+      {/* Top Bar Header with Logo and Scroll-To-Top */}
       <Header />
 
       {/* Main Content Sections */}
       <main className="flex-1">
-        {/* 1. Hero Section with Showroom visual anchor & 4-column KPI metrics */}
-        <HeroSection />
+        {/* 1. Hero Section: Full-Width Carousel with authentic Prycal background images & redirections */}
+        <HeroSection onOpenCalculator={() => setIsCalculatorModalOpen(true)} />
 
-        {/* 2. Interactive Power Tools Hub: 2 Tabs (Calculate Backup & Get Quotation) */}
-        <PowerToolsHub />
+        {/* 2. Interactive Power Tools Hub: 2 Tabs (Calculate Backup & Get Quotation with 10% off MRP) */}
+        <PowerToolsHub
+          isCalculatorModalOpen={isCalculatorModalOpen}
+          onOpenCalculator={() => setIsCalculatorModalOpen(true)}
+          onCloseCalculator={() => setIsCalculatorModalOpen(false)}
+        />
 
         {/* 3. Interactive Vehicle Battery Lookup Tool */}
         <VehicleBatteryFinder />

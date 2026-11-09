@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { businessInfo } from '../data/businessData';
 import { Phone, Menu, X, Zap } from 'lucide-react';
+import { ShreePowerLogo } from './ShreePowerLogo';
 
 interface HeaderProps {
   onOpenQuickQuote?: () => void;
@@ -13,16 +14,8 @@ export const Header: React.FC<HeaderProps> = ({ onOpenQuickQuote }) => {
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between gap-8 h-16">
-          {/* Zone 1: Single text wordmark in display face (§2 Top Bar Contract) */}
-          <a
-            href="#"
-            className="text-base sm:text-lg font-extrabold tracking-tight text-slate-900 whitespace-nowrap shrink-0 flex items-center gap-1.5"
-          >
-            <span className="w-7 h-7 rounded-md bg-amber-400 text-slate-950 flex items-center justify-center font-black text-sm">
-              ⚡
-            </span>
-            <span>Shree Power Enterprises</span>
-          </a>
+          {/* Zone 1: Logo with smooth scroll back to top of website */}
+          <ShreePowerLogo onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} />
 
           {/* Zone 2: 4–5 single-line nav links with whitespace-nowrap shrink-0 */}
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
