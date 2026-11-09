@@ -11,3 +11,48 @@
     font-family: 'JetBrains Mono', monospace;
   }
 }
+
+/* Dedicated Print Styles for Quotation Slip */
+@media print {
+  /* Hide all app UI during print */
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  /* Make only the print slip visible */
+  #printable-receipt-slip,
+  #printable-receipt-slip * {
+    visibility: visible;
+  }
+
+  #printable-receipt-slip {
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 16px 24px !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    border: 1px solid #94a3b8 !important;
+    border-radius: 0 !important;
+    z-index: 999999 !important;
+  }
+
+  /* Hide print buttons inside the modal when printing */
+  .no-print,
+  .no-print * {
+    display: none !important;
+    visibility: hidden !important;
+  }
+}

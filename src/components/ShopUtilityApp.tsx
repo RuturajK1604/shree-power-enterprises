@@ -20,6 +20,7 @@ import {
   Clock,
   Award,
   SlidersHorizontal,
+  X,
 } from 'lucide-react';
 import { businessInfo } from '../data/businessData';
 import { PRYCAL_PRICE_LIST, PrycalPriceItem } from '../data/prycalPrices';
@@ -82,6 +83,7 @@ export const ShopUtilityApp: React.FC = () => {
   const [clientName, setClientName] = useState<string>('');
   const [clientPhone, setClientPhone] = useState<string>('');
   const [copiedQuote, setCopiedQuote] = useState<boolean>(false);
+  const [showPrintModal, setShowPrintModal] = useState<boolean>(false);
 
   // =========================================================================
   // 3. PRICE LIST STATE
@@ -854,7 +856,7 @@ export const ShopUtilityApp: React.FC = () => {
 
                     <button
                       type="button"
-                      onClick={() => window.print()}
+                      onClick={() => setShowPrintModal(true)}
                       className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors cursor-pointer"
                     >
                       <Printer className="w-3.5 h-3.5" />
@@ -1386,6 +1388,198 @@ export const ShopUtilityApp: React.FC = () => {
           </div>
         </div>
       </footer>
+
+      {/* =========================================================================
+          PRINT SLIP MODAL & INVOICE RECEIPT (Captured by @media print)
+         ========================================================================= */}
+      {showPrintModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+          <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden my-auto border border-slate-300">
+            {/* Modal Control Toolbar (no-print) */}
+            <div className="no-print p-4 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <Printer className="w-4 h-4 text-amber-400" />
+                <span className="font-bold text-sm">Official Quotation Slip</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    try {
+                      window.print();
+                    } catch (e) {
+                      console.error('Print trigger error:', e);
+                    }
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-bold transition-all cursor-pointer shadow-sm"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>Print Receipt / PDF</span>
+                </button>
+                <a
+                  href={`https://wa.me/?text=${encodeURIComponent(generateWhatsAppMessage())}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all cursor-pointer shadow-sm"
+                >
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">WhatsApp</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setShowPrintModal(false)}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                  aria-label="Close print preview"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Printable Receipt Paper Slip */}
+            <div id="printable-receipt-slip" className="p-6 sm:p-8 bg-white text-slate-900 text-xs font-sans space-y-4">
+              {/* Slip Header */}
+              <div className="text-center pb-3 border-b-2 border-slate-900">
+                <h2 className="text-xl font-black text-slate-950 tracking-wide uppercase">
+                  Shree Power Enterprises
+                </h2>
+                <div className="text-[11px] font-semibold text-slate-700 mt-0.5">
+                  Authorised Regional Distributor for Prycal Batteries · Savedi, Ahilyanagar
+                </div>
+                <div className="text-[10px] text-slate-500 mt-0.5">
+                  Shop No. 5, Adishakti-Kamal Apts, Kushtadham Road, Sonanagar Chowk, Savedi, Ahilyanagar (Ahmednagar) - 414003
+                </div>
+                <div className="text-[11px] font-mono font-bold text-slate-900 mt-1">
+                  Mob: +91 94224 64766 / +91 88059 22623 · UPI / Cash &amp; Carry
+                </div>
+              </div>
+
+              {/* Estimate Meta & Client Info */}
+              <div className="grid grid-cols-2 gap-4 text-xs pb-3 border-b border-slate-200">
+                <div>
+                  <div className="text-slate-500 text-[10px] uppercase font-bold">Quoted To:</div>
+                  <div className="font-extrabold text-slate-900 text-sm mt-0.5">
+                    {clientName.trim() || (clientType === 'dealer' ? 'Dealer Partner' : 'Counter Retail Customer')}
+                  </div>
+                  <div className="text-slate-600 font-mono text-[11px]">
+                    {clientPhone.trim() ? `Mobile: ${clientPhone.trim()}` : 'Counter Walk-in / Direct Call'}
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <div className="text-slate-500 text-[10px] uppercase font-bold">Estimate Ref:</div>
+                  <div className="font-mono font-bold text-slate-900 text-xs mt-0.5">
+                    {quoteRefId}
+                  </div>
+                  <div className="text-slate-600 text-[11px]">
+                    Date: {new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </div>
+                  <div className="inline-block mt-0.5 px-2 py-0.5 rounded text-[10px] font-bold uppercase font-mono bg-slate-100 text-slate-800 border border-slate-300">
+                    {clientType === 'dealer' ? 'DEALER WHOLESALE' : `CUSTOMER RETAIL (${customerDiscountPercent}% OFF)`}
+                  </div>
+                </div>
+              </div>
+
+              {/* Items Table */}
+              <div className="overflow-hidden border border-slate-300 rounded-lg">
+                <table className="min-w-full divide-y divide-slate-300 text-xs">
+                  <thead className="bg-slate-100 font-bold text-slate-800 text-[11px] uppercase">
+                    <tr>
+                      <th className="px-3 py-2 text-left">Description</th>
+                      <th className="px-3 py-2 text-center">Warranty</th>
+                      <th className="px-3 py-2 text-right">MRP</th>
+                      <th className="px-3 py-2 text-right">Rate</th>
+                      <th className="px-3 py-2 text-center">Qty</th>
+                      <th className="px-3 py-2 text-right">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 font-mono">
+                    <tr>
+                      <td className="px-3 py-2.5 font-sans">
+                        <div className="font-bold text-slate-900">Prycal {selectedProduct.model}</div>
+                        <div className="text-[10px] text-slate-500">{selectedProduct.category} · {selectedProduct.capacity}</div>
+                      </td>
+                      <td className="px-3 py-2.5 text-center text-[10px] font-sans text-slate-600">{selectedProduct.warranty}</td>
+                      <td className="px-3 py-2.5 text-right text-slate-400">₹{mrpPerUnit.toLocaleString()}</td>
+                      <td className="px-3 py-2.5 text-right font-bold text-slate-900">₹{unitPriceCharged.toLocaleString()}</td>
+                      <td className="px-3 py-2.5 text-center font-bold text-slate-900">{quantity}</td>
+                      <td className="px-3 py-2.5 text-right font-bold text-slate-900">₹{totalBatteryAmount.toLocaleString()}</td>
+                    </tr>
+                    {selectedInverter.id !== 'none' && (
+                      <tr>
+                        <td className="px-3 py-2.5 font-sans">
+                          <div className="font-bold text-slate-900">{selectedInverter.name}</div>
+                          <div className="text-[10px] text-slate-500">{selectedInverter.type} · {selectedInverter.va}VA</div>
+                        </td>
+                        <td className="px-3 py-2.5 text-center text-[10px] font-sans text-slate-600">Standard</td>
+                        <td className="px-3 py-2.5 text-right text-slate-400">—</td>
+                        <td className="px-3 py-2.5 text-right font-bold text-slate-900">₹{inverterPrice.toLocaleString()}</td>
+                        <td className="px-3 py-2.5 text-center font-bold text-slate-900">1</td>
+                        <td className="px-3 py-2.5 text-right font-bold text-slate-900">₹{totalInverterAmount.toLocaleString()}</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Total Calculation Summary */}
+              <div className="flex justify-end pt-1">
+                <div className="w-72 space-y-1.5 font-mono text-xs">
+                  <div className="flex justify-between text-slate-600">
+                    <span>Subtotal:</span>
+                    <span>₹{subtotalBeforeScrap.toLocaleString()}</span>
+                  </div>
+
+                  {clientType === 'customer' ? (
+                    <div className="flex justify-between text-emerald-700 text-[11px]">
+                      <span>Discount ({customerDiscountPercent}%):</span>
+                      <span>-₹{(customerDiscountAmountPerUnit * quantity).toLocaleString()}</span>
+                    </div>
+                  ) : (
+                    <div className="flex justify-between text-blue-700 text-[11px]">
+                      <span>Pricing Basis:</span>
+                      <span>Wholesale DP</span>
+                    </div>
+                  )}
+
+                  {withOldBattery ? (
+                    <div className="flex justify-between text-amber-800 font-semibold border-t border-slate-200 pt-1">
+                      <span>Old Battery Scrap ({quantity}x):</span>
+                      <span>-₹{totalScrapCredit.toLocaleString()}</span>
+                    </div>
+                  ) : (
+                    <div className="flex justify-between text-slate-500 text-[11px] border-t border-slate-200 pt-1">
+                      <span>Old Battery Scrap:</span>
+                      <span>Without Old (₹0)</span>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between font-black text-slate-950 text-base pt-2 border-t-2 border-slate-900">
+                    <span className="font-sans">NET PAYABLE:</span>
+                    <span className="text-amber-800">₹{finalTotalAmount.toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Terms and Signatures */}
+              <div className="pt-4 border-t border-slate-300 grid grid-cols-2 gap-4 text-[10px] text-slate-600">
+                <div>
+                  <div className="font-bold text-slate-800 uppercase text-[10px]">Terms &amp; Conditions:</div>
+                  <ul className="list-disc list-inside space-y-0.5 mt-0.5">
+                    <li>Prices are inclusive of all taxes as applicable.</li>
+                    <li>100% Genuine factory-fresh stock with official warranty card.</li>
+                    <li>Payment Term: On Cash &amp; Carry / UPI basis.</li>
+                  </ul>
+                </div>
+                <div className="flex flex-col justify-end text-right">
+                  <div className="font-bold text-slate-900">For Shree Power Enterprises</div>
+                  <div className="text-[10px] text-slate-500 mt-6">(Authorised Signatory)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
