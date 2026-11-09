@@ -31,18 +31,18 @@ export default function App() {
         {/* 1. Hero Section: Full-Width Carousel with authentic Prycal background images & redirections */}
         <HeroSection onOpenCalculator={() => setIsCalculatorModalOpen(true)} />
 
-        {/* 2. Interactive Power Tools Hub: 2 Tabs (Calculate Backup & Get Quotation with 10% off MRP) */}
+        {/* 2. Products & Inverter Catalog with Filters & Modal (Moved to top as requested) */}
+        <ProductCatalog />
+
+        {/* 3. Interactive Power Tools Hub: 2 Tabs (Calculate Backup & Get Quotation with 10% off MRP) */}
         <PowerToolsHub
           isCalculatorModalOpen={isCalculatorModalOpen}
           onOpenCalculator={() => setIsCalculatorModalOpen(true)}
           onCloseCalculator={() => setIsCalculatorModalOpen(false)}
         />
 
-        {/* 3. Interactive Vehicle Battery Lookup Tool */}
+        {/* 4. Interactive Vehicle Battery Lookup Tool */}
         <VehicleBatteryFinder />
-
-        {/* 4. Products & Inverter Catalog with Filters & Modal */}
-        <ProductCatalog />
 
         {/* 5. Scrap & Buyback Value Calculator */}
         <ScrapValueCalculator />

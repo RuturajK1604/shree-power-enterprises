@@ -44,7 +44,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenCalculator }) =>
       title: 'Powering Ahilyanagar with Authentic Prycal Batteries',
       description:
         'Official regional distributor in Savedi. Direct factory-fresh stock with official manufacturer warranty cards, 10% less in MRP offer rates, and fast doorstep delivery.',
-      badge: 'Official Distributor w.e.f. 2014',
+      badge: 'Authorised Prycal Distributor',
       primaryAction: {
         label: 'See Products & Prices',
         action: () => scrollToSection('products'),
@@ -255,30 +255,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenCalculator }) =>
             }`}
           />
         ))}
-      </div>
-
-      {/* 4-column KPI strip below hero carousel */}
-      <div className="relative z-20 bg-slate-900 border-t border-slate-800">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center sm:text-left">
-            <div className="px-2">
-              <div className="text-xl sm:text-2xl font-black font-mono text-white tracking-tight">10+ Years</div>
-              <div className="text-[11px] text-slate-400 mt-0.5">Established in 2014 in Savedi</div>
-            </div>
-            <div className="px-2">
-              <div className="text-xl sm:text-2xl font-black font-mono text-amber-400 tracking-tight">Authorised</div>
-              <div className="text-[11px] text-slate-400 mt-0.5">Prycal Batteries Regional Distributor</div>
-            </div>
-            <div className="px-2">
-              <div className="text-xl sm:text-2xl font-black font-mono text-emerald-400 tracking-tight">10% Off MRP</div>
-              <div className="text-[11px] text-slate-400 mt-0.5">Direct Manufacturer Discount</div>
-            </div>
-            <div className="px-2">
-              <div className="text-xl sm:text-2xl font-black font-mono text-white tracking-tight">30-Min Fast</div>
-              <div className="text-[11px] text-slate-400 mt-0.5">Doorstep Fitment in Ahilyanagar</div>
-            </div>
-          </div>
-        </div>
       </div>
     </section>
   );

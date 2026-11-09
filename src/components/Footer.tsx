@@ -16,7 +16,7 @@ export const Footer: React.FC = () => {
               <span>{businessInfo.name}</span>
             </div>
             <p className="text-slate-400 leading-relaxed text-xs">
-              Authorised distributor for <strong>Prycal Batteries</strong> in Ahilyanagar. Genuine sales, on-site installation, computerized testing, and scrap buybacks since {businessInfo.established}.
+              Authorised distributor for <strong>Prycal Batteries</strong> in Ahilyanagar. Genuine sales, on-site installation, computerized testing, and scrap buybacks.
             </p>
             <div className="pt-1 text-[11px] text-amber-400 font-medium">
               Registered in Ahilyanagar, Maharashtra

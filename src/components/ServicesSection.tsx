@@ -37,7 +37,7 @@ export const ServicesSection: React.FC = () => {
             </p>
           </div>
           <div className="text-xs font-semibold text-slate-700 bg-white px-3 py-1.5 rounded-md border border-slate-200 shadow-xs">
-            10+ Years of Hands-on Experience
+            Certified Technical Support
           </div>
         </div>
 

@@ -45,15 +45,10 @@ export const ShreePowerLogo: React.FC<ShreePowerLogoProps> = ({ className = '', 
 
       {/* Brand Name Typography */}
       <div className="flex flex-col">
-        <div className="flex items-center gap-1.5">
-          <span className="text-base sm:text-lg font-black tracking-tight text-slate-900 uppercase leading-none group-hover:text-amber-600 transition-colors">
-            Shree Power
-          </span>
-          <span className="text-[10px] font-bold text-amber-700 bg-amber-100/80 px-1.5 py-0.2 rounded font-mono hidden sm:inline-block">
-            Est. 2014
-          </span>
-        </div>
-        <span className="text-[10px] sm:text-[11px] font-extrabold tracking-widest text-slate-500 uppercase leading-tight font-mono">
+        <span className="text-base sm:text-lg font-black tracking-tight text-slate-900 uppercase leading-none group-hover:text-amber-600 transition-colors">
+          Shree Power
+        </span>
+        <span className="text-[10px] sm:text-[11px] font-extrabold tracking-widest text-slate-500 uppercase leading-tight font-mono mt-0.5">
           Enterprises · Ahilyanagar
         </span>
       </div>
