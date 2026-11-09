@@ -1,6 +1,0 @@
-{
-  "name": "Shree Power Enterprises",
-  "description": "Authorised Prycal battery distributor and Luminous inverter specialist in Ahilyanagar, Maharashtra.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
