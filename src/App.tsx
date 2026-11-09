@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { Header } from './components/Header';
 import { HeroSection } from './components/HeroSection';
 import { ProductCatalog } from './components/ProductCatalog';
-import { BackupCalculator } from './components/BackupCalculator';
+import { PowerToolsHub } from './components/PowerToolsHub';
 import { VehicleBatteryFinder } from './components/VehicleBatteryFinder';
 import { ScrapValueCalculator } from './components/ScrapValueCalculator';
 import { ServicesSection } from './components/ServicesSection';
@@ -29,8 +29,8 @@ export default function App() {
         {/* 1. Hero Section with Showroom visual anchor & 4-column KPI metrics */}
         <HeroSection />
 
-        {/* 2. Interactive Backup Sizer & Power Calculator */}
-        <BackupCalculator />
+        {/* 2. Interactive Power Tools Hub: 2 Tabs (Calculate Backup & Get Quotation) */}
+        <PowerToolsHub />
 
         {/* 3. Interactive Vehicle Battery Lookup Tool */}
         <VehicleBatteryFinder />
